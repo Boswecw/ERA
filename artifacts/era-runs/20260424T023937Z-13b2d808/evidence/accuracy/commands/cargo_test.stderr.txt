@@ -1,0 +1,548 @@
+   Compiling forge-command v1.0.0 (/home/charlie/Forge/ecosystem/Forge_Command/src-tauri)
+error[E0432]: unresolved imports `crate::models::self_healing::SelfHealingCentipedeProjectionDigest`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeOutcome`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeResponse`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeStatus`
+  --> src/self_healing/projection_intake.rs:26:5
+   |
+26 |     SelfHealingCentipedeProjectionDigest, SelfHealingCentipedeProjectionIntakeOutcome,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingCentipedeProjectionIntakeOutcome` in `models::self_healing`
+   |     |
+   |     no `SelfHealingCentipedeProjectionDigest` in `models::self_healing`
+27 |     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingCentipedeProjectionIntakeStatus,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingCentipedeProjectionIntakeStatus` in `models::self_healing`
+   |     |
+   |     no `SelfHealingCentipedeProjectionIntakeResponse` in `models::self_healing`
+   |
+help: a similar name exists in the module
+   |
+26 -     SelfHealingCentipedeProjectionDigest, SelfHealingCentipedeProjectionIntakeOutcome,
+26 +     SelfHealingCentipedeEvidenceDigest, SelfHealingCentipedeProjectionIntakeOutcome,
+   |
+help: a similar name exists in the module
+   |
+26 -     SelfHealingCentipedeProjectionDigest, SelfHealingCentipedeProjectionIntakeOutcome,
+26 +     SelfHealingCentipedeProjectionDigest, SelfHealingCentipedeProjectionReceiptView,
+   |
+help: a similar name exists in the module
+   |
+27 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingCentipedeProjectionIntakeStatus,
+27 +     SelfHealingRunProjectionIntakeResponse, SelfHealingCentipedeProjectionIntakeStatus,
+   |
+help: a similar name exists in the module
+   |
+27 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingCentipedeProjectionIntakeStatus,
+27 +     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingCentipedeProjectionReceiptView,
+   |
+
+error[E0432]: unresolved imports `crate::models::self_healing::SelfHealingAdaptCentipedeRunRequest`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeRequest`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeResponse`, `crate::models::self_healing::SelfHealingGetCentipedeIncidentRequest`
+ --> src/commands/self_healing.rs:7:5
+  |
+7 |     SelfHealingAdaptCentipedeRunRequest, SelfHealingAdaptCentipedeRunResponse,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingAdaptCentipedeRunRequest` in `models::self_healing`
+8 |     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionIntakeRequest,
+  |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingCentipedeProjectionIntakeRequest` in `models::self_healing`
+9 |     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingGetCentipedeIncidentRequest` in `models::self_healing`
+  |     |
+  |     no `SelfHealingCentipedeProjectionIntakeResponse` in `models::self_healing`
+  |
+help: a similar name exists in the module
+  |
+7 -     SelfHealingAdaptCentipedeRunRequest, SelfHealingAdaptCentipedeRunResponse,
+7 +     SelfHealingAdaptCentipedeRunResponse, SelfHealingAdaptCentipedeRunResponse,
+  |
+help: a similar name exists in the module
+  |
+8 -     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionIntakeRequest,
+8 +     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionReceiptView,
+  |
+help: a similar name exists in the module
+  |
+9 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+9 +     SelfHealingRunProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+  |
+help: a similar name exists in the module
+  |
+9 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+9 +     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingListCentipedeIncidentsRequest,
+  |
+
+error[E0432]: unresolved imports `crate::models::self_healing::SelfHealingAdaptCentipedeRunRequest`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeRequest`, `crate::models::self_healing::SelfHealingCentipedeProjectionIntakeResponse`, `crate::models::self_healing::SelfHealingGetCentipedeIncidentRequest`
+ --> src/commands/self_healing.rs:7:5
+  |
+7 |     SelfHealingAdaptCentipedeRunRequest, SelfHealingAdaptCentipedeRunResponse,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingAdaptCentipedeRunRequest` in `models::self_healing`
+8 |     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionIntakeRequest,
+  |                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingCentipedeProjectionIntakeRequest` in `models::self_healing`
+9 |     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ no `SelfHealingGetCentipedeIncidentRequest` in `models::self_healing`
+  |     |
+  |     no `SelfHealingCentipedeProjectionIntakeResponse` in `models::self_healing`
+  |
+  = note: unresolved item `crate::self_healing::projection_intake::tests::SelfHealingCentipedeProjectionIntakeResponse` exists but is inaccessible
+help: a similar name exists in the module
+  |
+7 -     SelfHealingAdaptCentipedeRunRequest, SelfHealingAdaptCentipedeRunResponse,
+7 +     SelfHealingAdaptCentipedeRunResponse, SelfHealingAdaptCentipedeRunResponse,
+  |
+help: a similar name exists in the module
+  |
+8 -     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionIntakeRequest,
+8 +     SelfHealingCentipedeEvidenceIncidentView, SelfHealingCentipedeProjectionReceiptView,
+  |
+help: a similar name exists in the module
+  |
+9 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+9 +     SelfHealingRunProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+  |
+help: a similar name exists in the module
+  |
+9 -     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingGetCentipedeIncidentRequest,
+9 +     SelfHealingCentipedeProjectionIntakeResponse, SelfHealingListCentipedeIncidentsRequest,
+  |
+
+error[E0282]: type annotations needed
+   --> src/self_healing/projection_intake.rs:201:13
+    |
+201 |             reason.clone(),
+    |             ^^^^^^ cannot infer type
+
+error[E0609]: no field `intake_status` on type `SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:212:23
+    |
+212 |         match receipt.intake_status {
+    |                       ^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0308]: mismatched types
+   --> src/self_healing/projection_intake.rs:221:21
+    |
+214 |                 CentipedeRepository::mark_projection_consumed(
+    |                 --------------------------------------------- arguments to this function are incorrect
+...
+221 |                     receipt.consumed_at,
+    |                     ^^^^^^^^^^^^^^^^^^^ expected `DateTime<Utc>`, found `Option<DateTime<Utc>>`
+    |
+    = note: expected struct `chrono::DateTime<_>`
+                 found enum `std::option::Option<chrono::DateTime<_>>`
+note: associated function defined here
+   --> src/centipede/persistence/repository.rs:407:18
+    |
+407 |     pub async fn mark_projection_consumed(
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+411 |         consumed_at: DateTime<Utc>,
+    |         --------------------------
+help: consider using `Option::expect` to unwrap the `std::option::Option<chrono::DateTime<Utc>>` value, panicking if the value is an `Option::None`
+    |
+221 |                     receipt.consumed_at.expect("REASON"),
+    |                                        +++++++++++++++++
+
+error[E0599]: no method named `as_deref` found for struct `std::string::String` in the current scope
+   --> src/self_healing/projection_intake.rs:783:31
+    |
+783 |     match receipt.incident_id.as_deref() {
+    |                               ^^^^^^^^
+    |
+help: there is a method `as_ref` with a similar name
+    |
+783 -     match receipt.incident_id.as_deref() {
+783 +     match receipt.incident_id.as_ref() {
+    |
+
+error[E0609]: no field `source_run_id` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:948:20
+    |
+948 |     .bind(&receipt.source_run_id)
+    |                    ^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `evidence_bundle_id` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:949:20
+    |
+949 |     .bind(&receipt.evidence_bundle_id)
+    |                    ^^^^^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `intake_status` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:953:19
+    |
+953 |     .bind(receipt.intake_status.as_str())
+    |                   ^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `action_outcome` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:954:19
+    |
+954 |     .bind(receipt.action_outcome.as_str())
+    |                   ^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `reason` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:955:20
+    |
+955 |     .bind(&receipt.reason)
+    |                    ^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `payload_sha256` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:956:20
+    |
+956 |     .bind(&receipt.payload_sha256)
+    |                    ^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `operator_review_required` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:957:19
+    |
+957 |     .bind(receipt.operator_review_required)
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `proposal_required` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:958:19
+    |
+958 |     .bind(receipt.proposal_required)
+    |                   ^^^^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0308]: mismatched types
+    --> src/self_healing/projection_intake.rs:1078:9
+     |
+1070 |     CentipedeRepository::mark_projection_blocked(
+     |     -------------------------------------------- arguments to this function are incorrect
+...
+1078 |         receipt.consumed_at,
+     |         ^^^^^^^^^^^^^^^^^^^ expected `DateTime<Utc>`, found `Option<DateTime<Utc>>`
+     |
+     = note: expected struct `chrono::DateTime<_>`
+                  found enum `std::option::Option<chrono::DateTime<_>>`
+note: associated function defined here
+    --> src/centipede/persistence/repository.rs:434:18
+     |
+ 434 |     pub async fn mark_projection_blocked(
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 439 |         blocked_at: DateTime<Utc>,
+     |         -------------------------
+help: consider using `Option::expect` to unwrap the `std::option::Option<chrono::DateTime<Utc>>` value, panicking if the value is an `Option::None`
+     |
+1078 |         receipt.consumed_at.expect("REASON"),
+     |                            +++++++++++++++++
+
+error[E0308]: mismatched types
+   --> src/self_healing/projection_intake.rs:221:21
+    |
+214 |                 CentipedeRepository::mark_projection_consumed(
+    |                 --------------------------------------------- arguments to this function are incorrect
+...
+221 |                     receipt.consumed_at,
+    |                     ^^^^^^^^^^^^^^^^^^^ expected `DateTime<Utc>`, found `Option<DateTime<Utc>>`
+    |
+    = note: expected struct `chrono::DateTime<_>`
+                 found enum `std::option::Option<chrono::DateTime<_>>`
+note: associated function defined here
+   --> src/centipede/persistence/repository.rs:407:18
+    |
+407 |     pub async fn mark_projection_consumed(
+    |                  ^^^^^^^^^^^^^^^^^^^^^^^^
+...
+411 |         consumed_at: DateTime<Utc>,
+    |         --------------------------
+help: consider using `Option::expect` to unwrap the `std::option::Option<chrono::DateTime<chrono::Utc>>` value, panicking if the value is an `Option::None`
+    |
+221 |                     receipt.consumed_at.expect("REASON"),
+    |                                        +++++++++++++++++
+
+error[E0308]: mismatched types
+    --> src/self_healing/projection_intake.rs:1078:9
+     |
+1070 |     CentipedeRepository::mark_projection_blocked(
+     |     -------------------------------------------- arguments to this function are incorrect
+...
+1078 |         receipt.consumed_at,
+     |         ^^^^^^^^^^^^^^^^^^^ expected `DateTime<Utc>`, found `Option<DateTime<Utc>>`
+     |
+     = note: expected struct `chrono::DateTime<_>`
+                  found enum `std::option::Option<chrono::DateTime<_>>`
+note: associated function defined here
+    --> src/centipede/persistence/repository.rs:434:18
+     |
+ 434 |     pub async fn mark_projection_blocked(
+     |                  ^^^^^^^^^^^^^^^^^^^^^^^
+...
+ 439 |         blocked_at: DateTime<Utc>,
+     |         -------------------------
+help: consider using `Option::expect` to unwrap the `std::option::Option<chrono::DateTime<chrono::Utc>>` value, panicking if the value is an `Option::None`
+     |
+1078 |         receipt.consumed_at.expect("REASON"),
+     |                            +++++++++++++++++
+
+error[E0282]: type annotations needed
+  --> src/commands/self_healing.rs:64:5
+   |
+64 | /     centipede_projection_intake_service(&state)
+65 | |         .intake_projection(&request.projection_id)
+66 | |         .await
+   | |______________^ cannot infer type
+
+error[E0282]: type annotations needed
+  --> src/commands/self_healing.rs:67:19
+   |
+67 |         .map_err(|error| error.to_ipc_string())
+   |                   ^^^^^  ----- type must be known at this point
+   |
+help: consider giving this closure parameter an explicit type
+   |
+67 |         .map_err(|error: /* Type */| error.to_ipc_string())
+   |                        ++++++++++++
+
+error[E0277]: the trait bound `SelfHealingCentipedeEvidenceIncidentView: std::cmp::Eq` is not satisfied
+    --> src/models/self_healing.rs:209:5
+     |
+ 204 | #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+     |                                                           -- in this derive macro expansion
+...
+ 209 |     pub incidents: Vec<SelfHealingCentipedeEvidenceIncidentView>,
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `std::cmp::Eq` is not implemented for `SelfHealingCentipedeEvidenceIncidentView`
+     |
+help: the trait `std::cmp::Eq` is implemented for `Vec<T, A>`
+    --> /home/charlie/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/alloc/src/vec/mod.rs:4065:1
+     |
+4065 | impl<T: Eq, A: Allocator> Eq for Vec<T, A> {}
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     = note: required for `Vec<SelfHealingCentipedeEvidenceIncidentView>` to implement `std::cmp::Eq`
+note: required by a bound in `AssertParamIsEq`
+    --> /home/charlie/.rustup/toolchains/stable-x86_64-unknown-linux-gnu/lib/rustlib/src/rust/library/core/src/cmp.rs:367:31
+     |
+ 367 | pub struct AssertParamIsEq<T: Eq + PointeeSized> {
+     |                               ^^ required by this bound in `AssertParamIsEq`
+help: consider annotating `SelfHealingCentipedeEvidenceIncidentView` with `#[derive(Eq)]`
+     |
+ 171 + #[derive(Eq)]
+ 172 | pub struct SelfHealingCentipedeEvidenceIncidentView {
+     |
+
+error[E0063]: missing field `doppel_intake_receipt` in initializer of `SelfHealingCentipedeEvidenceIncidentView`
+   --> src/self_healing/projection_intake.rs:626:8
+    |
+626 |     Ok(SelfHealingCentipedeEvidenceIncidentView {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ missing `doppel_intake_receipt`
+
+error[E0609]: no field `intake_status` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:862:45
+    |
+862 |         "projection_intake_status": receipt.intake_status.as_str(),
+    |                                             ^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0609]: no field `action_outcome` on type `&SelfHealingCentipedeProjectionReceiptView`
+   --> src/self_healing/projection_intake.rs:863:46
+    |
+863 |         "projection_action_outcome": receipt.action_outcome.as_str(),
+    |                                              ^^^^^^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `receipt_id`, `projection_id`, `incident_id`, `producer_id`, `producer_version` ... and 16 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `source_run_id`
+   --> src/self_healing/projection_intake.rs:906:9
+    |
+906 |         source_run_id: projection.source_run_id.clone(),
+    |         ^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `evidence_bundle_id`
+   --> src/self_healing/projection_intake.rs:907:9
+    |
+907 |         evidence_bundle_id: projection.evidence_bundle_id.clone(),
+    |         ^^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0308]: mismatched types
+   --> src/self_healing/projection_intake.rs:910:9
+    |
+910 |         incident_id,
+    |         ^^^^^^^^^^^ expected `String`, found `Option<String>`
+    |
+    = note: expected struct `std::string::String`
+                 found enum `std::option::Option<std::string::String>`
+help: consider using `Option::expect` to unwrap the `std::option::Option<std::string::String>` value, panicking if the value is an `Option::None`
+    |
+910 |         incident_id: incident_id.expect("REASON"),
+    |                    ++++++++++++++++++++++++++++++
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `intake_status`
+   --> src/self_healing/projection_intake.rs:911:9
+    |
+911 |         intake_status,
+    |         ^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `action_outcome`
+   --> src/self_healing/projection_intake.rs:912:9
+    |
+912 |         action_outcome,
+    |         ^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `reason`
+   --> src/self_healing/projection_intake.rs:913:9
+    |
+913 |         reason,
+    |         ^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `payload_sha256`
+   --> src/self_healing/projection_intake.rs:914:9
+    |
+914 |         payload_sha256: outbox.payload_sha256.clone(),
+    |         ^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `operator_review_required`
+   --> src/self_healing/projection_intake.rs:915:9
+    |
+915 |         operator_review_required: projection.operator_review_required,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `proposal_required`
+   --> src/self_healing/projection_intake.rs:916:9
+    |
+916 |         proposal_required: projection.proposal_required,
+    |         ^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+    |
+    = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `source_run_id`
+    --> src/self_healing/projection_intake.rs:1013:9
+     |
+1013 |         source_run_id: row.try_get("source_run_id")?,
+     |         ^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `evidence_bundle_id`
+    --> src/self_healing/projection_intake.rs:1014:9
+     |
+1014 |         evidence_bundle_id: row.try_get("evidence_bundle_id")?,
+     |         ^^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `intake_status`
+    --> src/self_healing/projection_intake.rs:1018:9
+     |
+1018 |         intake_status: parse_intake_status(row.try_get("intake_status")?)?,
+     |         ^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `action_outcome`
+    --> src/self_healing/projection_intake.rs:1019:9
+     |
+1019 |         action_outcome: parse_intake_outcome(row.try_get("action_outcome")?)?,
+     |         ^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `reason`
+    --> src/self_healing/projection_intake.rs:1020:9
+     |
+1020 |         reason: row.try_get("reason")?,
+     |         ^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `payload_sha256`
+    --> src/self_healing/projection_intake.rs:1021:9
+     |
+1021 |         payload_sha256: row.try_get("payload_sha256")?,
+     |         ^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `operator_review_required`
+    --> src/self_healing/projection_intake.rs:1022:9
+     |
+1022 |         operator_review_required: row.try_get("operator_review_required")?,
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0560]: struct `SelfHealingCentipedeProjectionReceiptView` has no field named `proposal_required`
+    --> src/self_healing/projection_intake.rs:1023:9
+     |
+1023 |         proposal_required: row.try_get("proposal_required")?,
+     |         ^^^^^^^^^^^^^^^^^ `SelfHealingCentipedeProjectionReceiptView` does not have this field
+     |
+     = note: available fields are: `producer_id`, `producer_version`, `incident_status`, `proposal_posture`, `review_posture` ... and 10 others
+
+error[E0282]: type annotations needed
+    --> src/self_healing/projection_intake.rs:1263:24
+     |
+1263 |           let response = SelfHealingCentipedeProjectionIntakeService::new(pool.clone())
+     |  ________________________^
+1264 | |             .intake_projection(&projection.projection_id)
+1265 | |             .await
+     | |__________________^ cannot infer type
+
+error[E0282]: type annotations needed
+    --> src/self_healing/projection_intake.rs:1317:24
+     |
+1317 |           let response = SelfHealingCentipedeProjectionIntakeService::new(pool.clone())
+     |  ________________________^
+1318 | |             .intake_projection(&projection.projection_id)
+1319 | |             .await
+     | |__________________^ cannot infer type
+
+error[E0382]: use of moved value: `confidence`
+   --> src/self_healing/centipede_evidence.rs:437:35
+    |
+284 |     let confidence = confidence_proxy(evidence_bundle, admitted_lane_count, traces.len());
+    |         ---------- move occurs because `confidence` has type `SelfHealingCentipedeConfidenceProxy`, which does not implement the `Copy` trait
+...
+405 |         confidence_posture_proxy: confidence,
+    |                                   ---------- value moved here
+...
+437 |         confidence_posture_proxy: confidence,
+    |                                   ^^^^^^^^^^ value used here after move
+    |
+help: consider cloning the value if the performance cost is acceptable
+    |
+405 |         confidence_posture_proxy: confidence.clone(),
+    |                                             ++++++++
+
+error[E0308]: mismatched types
+   --> src/self_healing/projection_intake.rs:917:22
+    |
+917 |         consumed_at: Utc::now(),
+    |                      ^^^^^^^^^^ expected `Option<DateTime<Utc>>`, found `DateTime<Utc>`
+    |
+    = note: expected enum `std::option::Option<chrono::DateTime<_>>`
+             found struct `chrono::DateTime<_>`
+help: try wrapping the expression in `Some`
+    |
+917 |         consumed_at: Some(Utc::now()),
+    |                      +++++          +
+
+Some errors have detailed explanations: E0063, E0277, E0282, E0308, E0382, E0432, E0560, E0599, E0609.
+For more information about an error, try `rustc --explain E0063`.
+error: could not compile `forge-command` (lib) due to 40 previous errors
+warning: build failed, waiting for other jobs to finish...
+error: could not compile `forge-command` (lib test) due to 42 previous errors

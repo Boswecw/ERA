@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "era"
+version = "0.1.0"
+description = "Evidence Review & Assurance local read-only proof CLI"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.setuptools]
+packages = ["era_cli", "era_cli.commands", "era_core", "era_integrations"]

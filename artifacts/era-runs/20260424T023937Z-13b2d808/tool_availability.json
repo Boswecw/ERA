@@ -1,0 +1,32 @@
+{
+  "captured_at": "2026-04-24T02:39:37Z",
+  "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+  "repo_path": "/home/charlie/Forge/ecosystem/Forge_Command",
+  "schema_version": "ERAToolAvailabilityReport.v1",
+  "tools": [
+    {
+      "note": null,
+      "status": "available",
+      "tool": "git",
+      "version": "git version 2.43.0"
+    },
+    {
+      "note": null,
+      "status": "available",
+      "tool": "python",
+      "version": "Python 3.12.3"
+    },
+    {
+      "note": null,
+      "status": "available",
+      "tool": "cargo",
+      "version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "note": null,
+      "status": "available",
+      "tool": "bun",
+      "version": "1.3.5"
+    }
+  ]
+}

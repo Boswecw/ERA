@@ -1,0 +1,166 @@
+{
+  "created_at": "2026-04-24T02:40:48Z",
+  "era_findings": [
+    {
+      "blocked_reason": null,
+      "commit_sha": "46c156d213bf2ada5d7979bf6286794dc6d487cc",
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "evidence_refs": [
+        "normalized:cargo_check",
+        "draft:cargo_check"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_id": "finding:cargo_check",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "operator_decision": "pending",
+      "raw_evidence_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "aeaffa7615b7383497c737ebb9b61143452ab75298517e6fd30b7f61a09f3fd6"
+      ],
+      "raw_evidence_refs": [
+        "cargo_check:stdout",
+        "cargo_check:stderr"
+      ],
+      "recommended_action": "operator_review",
+      "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+      "requires_operator_review": true,
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "safe_to_autofix": false,
+      "schema_version": "ERAFinding.v1",
+      "sha256": "f6f43c920a0196051f026ffbe37fbc2b5c84e7d4a1a7528a68a98a8093af4c7b",
+      "target_files": [],
+      "target_symbols": []
+    },
+    {
+      "blocked_reason": null,
+      "commit_sha": "46c156d213bf2ada5d7979bf6286794dc6d487cc",
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "evidence_refs": [
+        "normalized:cargo_test",
+        "draft:cargo_test"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_id": "finding:cargo_test",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "operator_decision": "pending",
+      "raw_evidence_hashes": [
+        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "6cde97e6064c99022b9197390ad5bffaad027f00530d3324c3be6e547a800cc0"
+      ],
+      "raw_evidence_refs": [
+        "cargo_test:stdout",
+        "cargo_test:stderr"
+      ],
+      "recommended_action": "operator_review",
+      "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+      "requires_operator_review": true,
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "safe_to_autofix": false,
+      "schema_version": "ERAFinding.v1",
+      "sha256": "5823d907a336ecce8829b8b571cea39fa72add84f38be08f7668fb26624e76b4",
+      "target_files": [],
+      "target_symbols": []
+    },
+    {
+      "blocked_reason": null,
+      "commit_sha": "46c156d213bf2ada5d7979bf6286794dc6d487cc",
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "evidence_refs": [
+        "normalized:bun_test",
+        "draft:bun_test"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_id": "finding:bun_test",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "operator_decision": "pending",
+      "raw_evidence_hashes": [
+        "4a3feb4ed826a1556f2e989b255a42b39959b633cbd71dde9f5b5ce5e22676f3",
+        "604509ec758379d595022648e7c0f61ee5ee4938168d50e6822dde9a960dbf82"
+      ],
+      "raw_evidence_refs": [
+        "bun_test:stdout",
+        "bun_test:stderr"
+      ],
+      "recommended_action": "operator_review",
+      "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+      "requires_operator_review": true,
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "safe_to_autofix": false,
+      "schema_version": "ERAFinding.v1",
+      "sha256": "6cb82552f65e7b0c92c9ab4c780613f5bafd81fa45e90c6aa9f4887aca23a5c5",
+      "target_files": [],
+      "target_symbols": []
+    }
+  ],
+  "lane_finding_drafts": [
+    {
+      "blocked_reason": null,
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "draft_id": "draft:cargo_check",
+      "evidence_refs": [
+        "normalized:cargo_check"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "recommended_action": "operator_review",
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "LaneFindingDraft.v1",
+      "sha256": "db3b93bcb631ae3ed5eea6e4482b41c06f8afa7b93024bf65d7c0b118e72e81a",
+      "target_files": [],
+      "target_symbols": []
+    },
+    {
+      "blocked_reason": null,
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "draft_id": "draft:cargo_test",
+      "evidence_refs": [
+        "normalized:cargo_test"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "recommended_action": "operator_review",
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "LaneFindingDraft.v1",
+      "sha256": "f037a99825989de35944011c49629014d0c7a79e74d2ee055544088be534ac5c",
+      "target_files": [],
+      "target_symbols": []
+    },
+    {
+      "blocked_reason": null,
+      "confidence": "high",
+      "created_at": "2026-04-24T02:40:48Z",
+      "draft_id": "draft:bun_test",
+      "evidence_refs": [
+        "normalized:bun_test"
+      ],
+      "evidence_strength": "mechanical",
+      "finding_type": "accuracy_gate_failed",
+      "lane": "accuracy",
+      "recommended_action": "operator_review",
+      "risk_level": "high",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "LaneFindingDraft.v1",
+      "sha256": "1f58af6d773531ed98dcd0b9fe6f1c4d7e5bdc39731b0d8ead65e519f6e8877b",
+      "target_files": [],
+      "target_symbols": []
+    }
+  ],
+  "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+  "run_id": "20260424T023937Z-13b2d808",
+  "schema_version": "ERAFindingSet.v1"
+}

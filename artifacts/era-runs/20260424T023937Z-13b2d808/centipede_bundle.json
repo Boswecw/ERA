@@ -1,0 +1,27 @@
+{
+  "commit_sha": "46c156d213bf2ada5d7979bf6286794dc6d487cc",
+  "evidence_bundle_refs": [
+    "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/test_evidence_bundle.json"
+  ],
+  "finding_ids": [
+    "finding:cargo_check",
+    "finding:cargo_test",
+    "finding:bun_test"
+  ],
+  "lane_results": [
+    {
+      "lane": "accuracy",
+      "read_only_invariant_status": "preexisting_dirty_tree",
+      "run_status": "completed"
+    }
+  ],
+  "projection_candidates": [],
+  "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+  "run_id": "20260424T023937Z-13b2d808",
+  "schema_version": "CentipedeExportBundle.v1",
+  "selection": {
+    "mode": "full",
+    "selection_method": "full_retest_all",
+    "selection_safety_class": "full_retest_all"
+  }
+}

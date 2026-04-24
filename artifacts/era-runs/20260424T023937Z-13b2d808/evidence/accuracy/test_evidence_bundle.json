@@ -1,0 +1,299 @@
+{
+  "command_results": [
+    {
+      "blocked_reason": null,
+      "command": [
+        "cargo",
+        "check",
+        "--manifest-path",
+        "src-tauri/Cargo.toml"
+      ],
+      "command_id": "cargo_check",
+      "completed_at": "2026-04-24T02:40:04Z",
+      "cwd": "/home/charlie/Forge/ecosystem/Forge_Command",
+      "duration_ms": 26757,
+      "exit_code": 101,
+      "label": "cargo check",
+      "started_at": "2026-04-24T02:39:37Z",
+      "status": "failed",
+      "stderr_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_check.stderr.txt",
+      "stderr_sha256": "aeaffa7615b7383497c737ebb9b61143452ab75298517e6fd30b7f61a09f3fd6",
+      "stdout_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_check.stdout.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "blocked_reason": null,
+      "command": [
+        "cargo",
+        "test",
+        "--manifest-path",
+        "src-tauri/Cargo.toml"
+      ],
+      "command_id": "cargo_test",
+      "completed_at": "2026-04-24T02:40:38Z",
+      "cwd": "/home/charlie/Forge/ecosystem/Forge_Command",
+      "duration_ms": 33628,
+      "exit_code": 101,
+      "label": "cargo test",
+      "started_at": "2026-04-24T02:40:04Z",
+      "status": "failed",
+      "stderr_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_test.stderr.txt",
+      "stderr_sha256": "6cde97e6064c99022b9197390ad5bffaad027f00530d3324c3be6e547a800cc0",
+      "stdout_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_test.stdout.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "blocked_reason": null,
+      "command": [
+        "bun",
+        "test"
+      ],
+      "command_id": "bun_test",
+      "completed_at": "2026-04-24T02:40:39Z",
+      "cwd": "/home/charlie/Forge/ecosystem/Forge_Command",
+      "duration_ms": 1110,
+      "exit_code": 1,
+      "label": "bun test",
+      "started_at": "2026-04-24T02:40:38Z",
+      "status": "failed",
+      "stderr_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_test.stderr.txt",
+      "stderr_sha256": "604509ec758379d595022648e7c0f61ee5ee4938168d50e6822dde9a960dbf82",
+      "stdout_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_test.stdout.txt",
+      "stdout_sha256": "4a3feb4ed826a1556f2e989b255a42b39959b633cbd71dde9f5b5ce5e22676f3",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    },
+    {
+      "blocked_reason": null,
+      "command": [
+        "bun",
+        "run",
+        "build"
+      ],
+      "command_id": "bun_build",
+      "completed_at": "2026-04-24T02:40:48Z",
+      "cwd": "/home/charlie/Forge/ecosystem/Forge_Command",
+      "duration_ms": 9721,
+      "exit_code": 0,
+      "label": "bun run build",
+      "started_at": "2026-04-24T02:40:39Z",
+      "status": "passed",
+      "stderr_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_build.stderr.txt",
+      "stderr_sha256": "6c966bb8d29267b70ffd9cf864cb66e2e81dd1f65cb5076510be574369f43a4c",
+      "stdout_path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_build.stdout.txt",
+      "stdout_sha256": "7f3acbc4ebf1de4d9af24650af4f3146bf78b10fff72bdc8fac380d26532b9de",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    }
+  ],
+  "created_at": "2026-04-24T02:40:48Z",
+  "lane": "accuracy",
+  "repo_id": "git@github.com:Boswecw/Forge_Command.git",
+  "run_id": "20260424T023937Z-13b2d808",
+  "schema_version": "TestEvidenceBundle.v1",
+  "sha256": "50bea26acf334f5de657711aa80426bbf4b5f5769fdd99bc74c9546392473ae0",
+  "tool_normalized_results": [
+    {
+      "created_at": "2026-04-24T02:40:04Z",
+      "normalized_result_id": "normalized:cargo_check",
+      "normalizer_name": "era_command_normalizer",
+      "normalizer_version": "0.1.0",
+      "parse_errors": [],
+      "parse_warnings": [],
+      "parsed_findings": [
+        {
+          "command_id": "cargo_check",
+          "exit_code": 101,
+          "finding_type": "accuracy_gate_failed",
+          "label": "cargo check",
+          "status": "failed"
+        }
+      ],
+      "raw_artifact_refs": [
+        "cargo_check:stdout",
+        "cargo_check:stderr"
+      ],
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolNormalizedResult.v1",
+      "sha256": "62524b4961124696ff1a5ad42981f88e984ef78fd6cdef746e201b15d2778bbc",
+      "summary_status": "failed",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "created_at": "2026-04-24T02:40:38Z",
+      "normalized_result_id": "normalized:cargo_test",
+      "normalizer_name": "era_command_normalizer",
+      "normalizer_version": "0.1.0",
+      "parse_errors": [],
+      "parse_warnings": [],
+      "parsed_findings": [
+        {
+          "command_id": "cargo_test",
+          "exit_code": 101,
+          "finding_type": "accuracy_gate_failed",
+          "label": "cargo test",
+          "status": "failed"
+        }
+      ],
+      "raw_artifact_refs": [
+        "cargo_test:stdout",
+        "cargo_test:stderr"
+      ],
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolNormalizedResult.v1",
+      "sha256": "4623ed1625591b9c42424fddf57b0622f2f2e1a11dc7e5cc92c4d90953e7ceb9",
+      "summary_status": "failed",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "created_at": "2026-04-24T02:40:39Z",
+      "normalized_result_id": "normalized:bun_test",
+      "normalizer_name": "era_command_normalizer",
+      "normalizer_version": "0.1.0",
+      "parse_errors": [],
+      "parse_warnings": [],
+      "parsed_findings": [
+        {
+          "command_id": "bun_test",
+          "exit_code": 1,
+          "finding_type": "accuracy_gate_failed",
+          "label": "bun test",
+          "status": "failed"
+        }
+      ],
+      "raw_artifact_refs": [
+        "bun_test:stdout",
+        "bun_test:stderr"
+      ],
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolNormalizedResult.v1",
+      "sha256": "4ce13655c4ee339e4cef86880d8606a51ca56c61da94b81bf886b8d1f4c6de08",
+      "summary_status": "failed",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    },
+    {
+      "created_at": "2026-04-24T02:40:48Z",
+      "normalized_result_id": "normalized:bun_build",
+      "normalizer_name": "era_command_normalizer",
+      "normalizer_version": "0.1.0",
+      "parse_errors": [],
+      "parse_warnings": [],
+      "parsed_findings": [],
+      "raw_artifact_refs": [
+        "bun_build:stdout",
+        "bun_build:stderr"
+      ],
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolNormalizedResult.v1",
+      "sha256": "dff3fe8a1fd51b5a11475e0a793f4cec306c3eb1d11ea0f55b42d38acac3730d",
+      "summary_status": "passed",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    }
+  ],
+  "tool_raw_artifacts": [
+    {
+      "artifact_kind": "stdout",
+      "command_id": "cargo_check",
+      "created_at": "2026-04-24T02:40:04Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_check.stdout.txt",
+      "raw_artifact_id": "cargo_check:stdout",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "artifact_kind": "stderr",
+      "command_id": "cargo_check",
+      "created_at": "2026-04-24T02:40:04Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_check.stderr.txt",
+      "raw_artifact_id": "cargo_check:stderr",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "aeaffa7615b7383497c737ebb9b61143452ab75298517e6fd30b7f61a09f3fd6",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "artifact_kind": "stdout",
+      "command_id": "cargo_test",
+      "created_at": "2026-04-24T02:40:38Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_test.stdout.txt",
+      "raw_artifact_id": "cargo_test:stdout",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "artifact_kind": "stderr",
+      "command_id": "cargo_test",
+      "created_at": "2026-04-24T02:40:38Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/cargo_test.stderr.txt",
+      "raw_artifact_id": "cargo_test:stderr",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "6cde97e6064c99022b9197390ad5bffaad027f00530d3324c3be6e547a800cc0",
+      "tool_name": "cargo",
+      "tool_version": "cargo 1.93.0 (083ac5135 2025-12-15)"
+    },
+    {
+      "artifact_kind": "stdout",
+      "command_id": "bun_test",
+      "created_at": "2026-04-24T02:40:39Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_test.stdout.txt",
+      "raw_artifact_id": "bun_test:stdout",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "4a3feb4ed826a1556f2e989b255a42b39959b633cbd71dde9f5b5ce5e22676f3",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    },
+    {
+      "artifact_kind": "stderr",
+      "command_id": "bun_test",
+      "created_at": "2026-04-24T02:40:39Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_test.stderr.txt",
+      "raw_artifact_id": "bun_test:stderr",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "604509ec758379d595022648e7c0f61ee5ee4938168d50e6822dde9a960dbf82",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    },
+    {
+      "artifact_kind": "stdout",
+      "command_id": "bun_build",
+      "created_at": "2026-04-24T02:40:48Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_build.stdout.txt",
+      "raw_artifact_id": "bun_build:stdout",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "7f3acbc4ebf1de4d9af24650af4f3146bf78b10fff72bdc8fac380d26532b9de",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    },
+    {
+      "artifact_kind": "stderr",
+      "command_id": "bun_build",
+      "created_at": "2026-04-24T02:40:48Z",
+      "path": "/home/charlie/Forge/ecosystem/ERA/artifacts/era-runs/20260424T023937Z-13b2d808/evidence/accuracy/commands/bun_build.stderr.txt",
+      "raw_artifact_id": "bun_build:stderr",
+      "run_id": "20260424T023937Z-13b2d808",
+      "schema_version": "ToolRawArtifact.v1",
+      "sha256": "6c966bb8d29267b70ffd9cf864cb66e2e81dd1f65cb5076510be574369f43a4c",
+      "tool_name": "bun",
+      "tool_version": "1.3.5"
+    }
+  ]
+}
