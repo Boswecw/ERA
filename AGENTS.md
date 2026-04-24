@@ -57,6 +57,15 @@ Fail validation on stale object hashes, stale review hashes, or broken raw evide
 Require clear_issue findings to include raw evidence refs and hashes.
 ```
 
+Allowed evaluation behavior in ERA-04:
+
+```text
+Capture changed-file metadata for changed-files accuracy runs.
+Classify changed files and record the RTS level cap.
+Record directly changed test files as advisory selected tests only.
+Fall back to full configured accuracy gates unless selection safety supports narrower proof.
+```
+
 Operator notes:
 
 ```text

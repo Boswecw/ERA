@@ -261,6 +261,80 @@ def _validate_hash_chain(
             errors.append(f"review.md is missing hash reference {hash_value}.")
 
 
+def _validate_selection_artifact(
+    *,
+    selection: dict[str, Any],
+    run_artifact: dict[str, Any],
+    errors: list[str],
+) -> None:
+    required_fields = {
+        "schema_version",
+        "run_id",
+        "repo_id",
+        "baseline_ref",
+        "baseline_commit",
+        "current_commit",
+        "mode",
+        "selection_level",
+        "selection_method",
+        "selection_safety_class",
+        "changed_files",
+        "changed_symbols",
+        "candidate_tests",
+        "selected_tests",
+        "excluded_tests",
+        "full_run_required",
+        "full_run_executed",
+        "fallback_reason",
+        "coverage_snapshot_ref",
+        "manifest_mapping_ref",
+        "rts_tool_name",
+        "rts_tool_version",
+        "selection_rationale",
+        "created_at",
+    }
+    missing = sorted(field for field in required_fields if field not in selection)
+    for field in missing:
+        errors.append(f"Selection artifact is missing {field}.")
+    if missing:
+        return
+
+    if selection.get("schema_version") != "TestSelectionArtifact.v1":
+        errors.append("Selection artifact has invalid schema_version.")
+    if selection.get("run_id") != run_artifact["run_id"]:
+        errors.append("Selection artifact run_id does not match run.json.")
+    if selection.get("current_commit") != run_artifact["commit_sha"]:
+        errors.append("Selection artifact current_commit does not match run.json.")
+    if selection.get("mode") != run_artifact["mode"]:
+        errors.append("Selection artifact mode does not match run.json.")
+
+    safety_classes = {"full_retest_all", "safe", "safe_enough", "heuristic", "advisory_only", "unknown"}
+    if selection.get("selection_safety_class") not in safety_classes:
+        errors.append("Selection artifact has invalid selection_safety_class.")
+
+    changed_files = selection.get("changed_files", [])
+    if not isinstance(changed_files, list):
+        errors.append("Selection artifact changed_files must be a list.")
+    if not isinstance(selection.get("changed_symbols", []), list):
+        errors.append("Selection artifact changed_symbols must be a list.")
+    if not isinstance(selection.get("candidate_tests", []), list):
+        errors.append("Selection artifact candidate_tests must be a list.")
+    if not isinstance(selection.get("selected_tests", []), list):
+        errors.append("Selection artifact selected_tests must be a list.")
+
+    if selection.get("mode") == "full":
+        if selection.get("selection_level") != 0:
+            errors.append("Full mode selection_level must be 0.")
+        if selection.get("selection_safety_class") != "full_retest_all":
+            errors.append("Full mode selection_safety_class must be full_retest_all.")
+    if selection.get("mode") == "changed-files":
+        if selection.get("selection_safety_class") not in {"safe", "safe_enough", "full_retest_all"}:
+            if selection.get("full_run_required") is False and selection.get("selected_tests"):
+                errors.append("Changed-files selected tests cannot be presented without full gates unless safety supports it.")
+        if selection.get("selection_level", 0) >= 2 and not selection.get("candidate_tests"):
+            errors.append("Selection level 2 requires candidate_tests evidence.")
+
+
 def validate_run_dir(run_dir: Path) -> dict[str, object]:
     errors: list[str] = []
 
@@ -319,16 +393,19 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
         if payload.get("run_id") and payload["run_id"] != run_artifact["run_id"]:
             errors.append(f"{name} run_id does not match run.json.")
 
-    if "accuracy" in lanes and run_artifact["mode"] == "changed-files":
-        selection_path = run_dir / "test_selection_artifact.json"
+    selection_path = run_dir / "test_selection_artifact.json"
+    if "accuracy" in lanes and run_artifact["mode"] == "changed-files" and not selection_path.exists():
+        errors.append("Changed-files accuracy runs require test_selection_artifact.json.")
+    if "accuracy" in lanes and run_artifact.get("test_selection_artifact_path"):
         if not selection_path.exists():
-            errors.append("Changed-files accuracy runs require test_selection_artifact.json.")
+            errors.append("Referenced selection artifact is missing.")
         else:
             selection = _load_json(selection_path)
-            if selection.get("run_id") != run_artifact["run_id"]:
-                errors.append("Selection artifact run_id does not match run.json.")
-            if "schema_version" not in selection:
-                errors.append("Selection artifact is missing schema_version.")
+            _validate_selection_artifact(
+                selection=selection,
+                run_artifact=run_artifact,
+                errors=errors,
+            )
 
     if "efficiency" in lanes:
         manifest_path = run_dir / "evidence/efficiency/workload_manifest.json"

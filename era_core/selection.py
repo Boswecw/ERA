@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 from era_core.artifact_paths import utc_now_text
 from era_core.models import PlannedCommand
@@ -100,7 +101,64 @@ def _candidate_tests(changed_files: list[str]) -> list[str]:
         lowered = path.lower()
         if "/tests/" in f"/{lowered}" or ".test." in lowered or ".spec." in lowered:
             candidates.append(path)
-    return candidates
+    return sorted(candidates)
+
+
+def _classify_changed_file(path: str) -> str:
+    lowered = path.lower()
+    name = Path(path).name.lower()
+    if lowered.startswith("docs/") or name.endswith((".md", ".rst", ".txt")):
+        return "documentation"
+    if any(marker in lowered for marker in ("/generated/", "/__generated__/", ".generated.")):
+        return "generated"
+    if name in {"package.json", "cargo.toml", "pyproject.toml", "tsconfig.json"}:
+        return "configuration"
+    if name.endswith(("lock", ".lock")) or name in {"cargo.lock", "bun.lock", "package-lock.json"}:
+        return "lockfile"
+    if "/tests/" in f"/{lowered}" or ".test." in lowered or ".spec." in lowered:
+        return "test"
+    if name.endswith((".rs", ".ts", ".tsx", ".js", ".jsx", ".py")):
+        return "source"
+    return "unknown"
+
+
+def _changed_file_classification(changed_files: list[str]) -> dict[str, list[str]]:
+    classified: dict[str, list[str]] = {}
+    for path in changed_files:
+        classified.setdefault(_classify_changed_file(path), []).append(path)
+    return {key: sorted(values) for key, values in sorted(classified.items())}
+
+
+def _selection_base(
+    *,
+    run_id: str,
+    repo_id: str,
+    baseline_ref: str | None,
+    baseline_commit: str | None,
+    current_commit: str,
+    mode: str,
+    changed_files: list[str],
+) -> dict[str, Any]:
+    return {
+        "schema_version": "TestSelectionArtifact.v1",
+        "run_id": run_id,
+        "repo_id": repo_id,
+        "baseline_ref": baseline_ref,
+        "baseline_commit": baseline_commit,
+        "current_commit": current_commit,
+        "mode": mode,
+        "changed_files": changed_files,
+        "changed_symbols": [],
+        "changed_file_classification": _changed_file_classification(changed_files),
+        "candidate_tests": _candidate_tests(changed_files),
+        "selected_tests": [],
+        "excluded_tests": [],
+        "coverage_snapshot_ref": None,
+        "manifest_mapping_ref": None,
+        "rts_tool_name": None,
+        "rts_tool_version": None,
+        "created_at": utc_now_text(),
+    }
 
 
 def build_selection_artifact(
@@ -113,145 +171,108 @@ def build_selection_artifact(
     mode: str,
     changed_files: list[str],
 ) -> dict[str, object]:
-    candidate_tests = _candidate_tests(changed_files)
+    artifact = _selection_base(
+        run_id=run_id,
+        repo_id=repo_id,
+        baseline_ref=baseline_ref,
+        baseline_commit=baseline_commit,
+        current_commit=current_commit,
+        mode=mode,
+        changed_files=changed_files,
+    )
     if mode == "full":
-        return {
-            "schema_version": "TestSelectionArtifact.v1",
-            "run_id": run_id,
-            "repo_id": repo_id,
-            "baseline_ref": baseline_ref,
-            "baseline_commit": baseline_commit,
-            "current_commit": current_commit,
-            "mode": mode,
-            "selection_level": 0,
-            "selection_method": "full_retest_all",
-            "selection_safety_class": "full_retest_all",
-            "changed_files": changed_files,
-            "changed_symbols": [],
-            "candidate_tests": candidate_tests,
-            "selected_tests": [],
-            "excluded_tests": [],
-            "full_run_required": True,
-            "full_run_executed": True,
-            "fallback_reason": None,
-            "coverage_snapshot_ref": None,
-            "manifest_mapping_ref": None,
-            "rts_tool_name": None,
-            "rts_tool_version": None,
-            "selection_rationale": "Full mode always runs all configured accuracy gates.",
-            "created_at": utc_now_text(),
-        }
+        artifact.update(
+            {
+                "selection_level": 0,
+                "selection_method": "full_retest_all",
+                "selection_safety_class": "full_retest_all",
+                "rts_level_cap": 0,
+                "full_run_required": True,
+                "full_run_executed": True,
+                "fallback_reason": None,
+                "selection_rationale": "Full mode always runs all configured accuracy gates.",
+            }
+        )
+        return artifact
 
     if not baseline_ref:
-        return {
-            "schema_version": "TestSelectionArtifact.v1",
-            "run_id": run_id,
-            "repo_id": repo_id,
-            "baseline_ref": baseline_ref,
-            "baseline_commit": baseline_commit,
-            "current_commit": current_commit,
-            "mode": mode,
-            "selection_level": 1,
-            "selection_method": "changed_file_metadata_full_fallback",
-            "selection_safety_class": "unknown",
-            "changed_files": changed_files,
-            "changed_symbols": [],
-            "candidate_tests": candidate_tests,
-            "selected_tests": [],
-            "excluded_tests": [],
-            "full_run_required": True,
-            "full_run_executed": False,
-            "fallback_reason": "No baseline ref was provided for changed-files mode.",
-            "coverage_snapshot_ref": None,
-            "manifest_mapping_ref": None,
-            "rts_tool_name": None,
-            "rts_tool_version": None,
-            "selection_rationale": "Changed-file metadata was incomplete, so ERA fell back to full gates.",
-            "created_at": utc_now_text(),
-        }
+        artifact.update(
+            {
+                "selection_level": 1,
+                "selection_method": "changed_file_metadata_full_fallback",
+                "selection_safety_class": "unknown",
+                "rts_level_cap": 1,
+                "full_run_required": True,
+                "full_run_executed": False,
+                "fallback_reason": "No baseline ref was provided for changed-files mode.",
+                "selection_rationale": "Changed-file metadata was incomplete, so ERA fell back to full gates.",
+            }
+        )
+        return artifact
 
     if not baseline_commit:
-        return {
-            "schema_version": "TestSelectionArtifact.v1",
-            "run_id": run_id,
-            "repo_id": repo_id,
-            "baseline_ref": baseline_ref,
-            "baseline_commit": baseline_commit,
-            "current_commit": current_commit,
-            "mode": mode,
-            "selection_level": 1,
-            "selection_method": "changed_file_metadata_full_fallback",
-            "selection_safety_class": "unknown",
-            "changed_files": changed_files,
-            "changed_symbols": [],
-            "candidate_tests": candidate_tests,
-            "selected_tests": [],
-            "excluded_tests": [],
-            "full_run_required": True,
-            "full_run_executed": False,
-            "fallback_reason": f"Unable to resolve baseline ref `{baseline_ref}`.",
-            "coverage_snapshot_ref": None,
-            "manifest_mapping_ref": None,
-            "rts_tool_name": None,
-            "rts_tool_version": None,
-            "selection_rationale": "Changed-file metadata was incomplete, so ERA fell back to full gates.",
-            "created_at": utc_now_text(),
-        }
+        artifact.update(
+            {
+                "selection_level": 1,
+                "selection_method": "changed_file_metadata_full_fallback",
+                "selection_safety_class": "unknown",
+                "rts_level_cap": 1,
+                "full_run_required": True,
+                "full_run_executed": False,
+                "fallback_reason": f"Unable to resolve baseline ref `{baseline_ref}`.",
+                "selection_rationale": "Changed-file metadata was incomplete, so ERA fell back to full gates.",
+            }
+        )
+        return artifact
 
     if not changed_files:
-        return {
-            "schema_version": "TestSelectionArtifact.v1",
-            "run_id": run_id,
-            "repo_id": repo_id,
-            "baseline_ref": baseline_ref,
-            "baseline_commit": baseline_commit,
-            "current_commit": current_commit,
-            "mode": mode,
-            "selection_level": 1,
-            "selection_method": "changed_file_metadata_no_changes",
-            "selection_safety_class": "advisory_only",
-            "changed_files": [],
-            "changed_symbols": [],
-            "candidate_tests": [],
-            "selected_tests": [],
-            "excluded_tests": [],
-            "full_run_required": False,
-            "full_run_executed": False,
-            "fallback_reason": "No changed files were detected relative to the baseline and working tree.",
-            "coverage_snapshot_ref": None,
-            "manifest_mapping_ref": None,
-            "rts_tool_name": None,
-            "rts_tool_version": None,
-            "selection_rationale": "ERA recorded changed-file metadata only; no safe selective execution was inferred.",
-            "created_at": utc_now_text(),
-        }
+        artifact.update(
+            {
+                "selection_level": 1,
+                "selection_method": "changed_file_metadata_no_changes",
+                "selection_safety_class": "advisory_only",
+                "rts_level_cap": 1,
+                "full_run_required": False,
+                "full_run_executed": False,
+                "fallback_reason": "No changed files were detected relative to the baseline and working tree.",
+                "selection_rationale": "ERA recorded changed-file metadata only; no safe selective execution was inferred.",
+            }
+        )
+        return artifact
 
-    return {
-        "schema_version": "TestSelectionArtifact.v1",
-        "run_id": run_id,
-        "repo_id": repo_id,
-        "baseline_ref": baseline_ref,
-        "baseline_commit": baseline_commit,
-        "current_commit": current_commit,
-        "mode": mode,
-        "selection_level": 1,
-        "selection_method": "changed_file_metadata_full_fallback",
-        "selection_safety_class": "heuristic",
-        "changed_files": changed_files,
-        "changed_symbols": [],
-        "candidate_tests": candidate_tests,
-        "selected_tests": [],
-        "excluded_tests": [],
-        "full_run_required": True,
-        "full_run_executed": False,
-        "fallback_reason": "ERA-01A does not yet map changed files to a safe subset of accuracy gates.",
-        "coverage_snapshot_ref": None,
-        "manifest_mapping_ref": None,
-        "rts_tool_name": None,
-        "rts_tool_version": None,
-        "selection_rationale": "Changed-file metadata was captured, then ERA fell back to full configured gates.",
-        "created_at": utc_now_text(),
-    }
+    classification = artifact["changed_file_classification"]
+    changed_kinds = set(classification)
+    candidate_tests = artifact["candidate_tests"]
+    only_test_files = bool(candidate_tests) and changed_kinds.issubset({"test", "documentation"})
+    if only_test_files:
+        artifact.update(
+            {
+                "selection_level": 2,
+                "selection_method": "changed_test_file_advisory_full_fallback",
+                "selection_safety_class": "heuristic",
+                "rts_level_cap": 2,
+                "selected_tests": candidate_tests,
+                "full_run_required": True,
+                "full_run_executed": False,
+                "fallback_reason": "Direct test-file selection was obvious, but ERA-04 still requires full gates until targeted execution is implemented.",
+                "selection_rationale": "ERA recorded the directly changed test files as advisory selected tests, then fell back to full configured accuracy gates.",
+            }
+        )
+        return artifact
+
+    artifact.update(
+        {
+            "selection_level": 1,
+            "selection_method": "changed_file_metadata_full_fallback",
+            "selection_safety_class": "heuristic",
+            "rts_level_cap": 1,
+            "full_run_required": True,
+            "full_run_executed": False,
+            "fallback_reason": "ERA-04 does not yet map changed files to a safe subset of accuracy gates.",
+            "selection_rationale": "Changed-file metadata was captured, then ERA fell back to full configured gates.",
+        }
+    )
+    return artifact
 
 
 def apply_selection_and_tooling(

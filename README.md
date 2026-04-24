@@ -10,6 +10,7 @@ ERA-01B — Redundancy Scan Proof
 ERA-01C — Efficiency Workload Proof
 ERA-02  — Unified Finding Normalization
 ERA-03  — Evidence Hash Chain
+ERA-04  — Differential / RTS Scaffolding
 ```
 
 Core doctrine:
@@ -100,3 +101,18 @@ review artifact
 ```
 
 `validate --latest` recomputes file hashes, embedded object hashes, review hash references, and finding-to-raw-evidence references.
+
+## Differential / RTS Scaffolding
+
+Changed-files accuracy runs emit `TestSelectionArtifact.v1` with:
+
+```text
+baseline and current commit
+changed files and file classifications
+candidate and selected tests
+RTS level cap
+selection safety class
+full-gate fallback rationale
+```
+
+ERA-04 records Level 1 changed-file metadata and an advisory Level 2 path for directly changed test files. It still falls back to full configured accuracy gates unless a future targeted runner can prove a safer selective execution path.
