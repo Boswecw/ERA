@@ -11,6 +11,8 @@ def determine_accuracy_classification(
 ) -> str:
     if read_only_invariant_status in {"read_only_invariant_failed", "head_changed_during_run"}:
         return "blocked_by_missing_evidence"
+    if any(item.status in {"failed_to_execute", "timed_out"} for item in command_results):
+        return "blocked_by_missing_evidence"
     if any(item.status == "failed" for item in command_results):
         return "inaccurate"
     if any(item.status == "blocked_by_missing_tool" for item in command_results):
