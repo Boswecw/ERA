@@ -39,6 +39,29 @@ def determine_redundancy_classification(
     return "no_mechanical_redundancy_candidates"
 
 
+def determine_efficiency_classification(
+    command_results: list[CommandResult],
+    baseline_artifact: dict[str, Any],
+    findings: list[dict[str, Any]],
+) -> str:
+    executed = [item for item in command_results if item.status not in {"skipped", "blocked_by_missing_tool"}]
+    if not executed and any(item.status == "blocked_by_missing_tool" for item in command_results):
+        return "blocked_by_missing_tool"
+    if any(item.status in {"failed_to_execute", "timed_out"} for item in command_results):
+        return "blocked_by_missing_evidence"
+    if not executed:
+        return "unproven"
+    if any(item["finding_type"] == "efficiency_regression_with_baseline" for item in findings):
+        return "regression_with_baseline"
+
+    comparisons = baseline_artifact.get("comparisons", [])
+    if any(item.get("comparison_status") == "unstable" for item in comparisons):
+        return "unstable"
+    if not any(item.get("comparison_status") in {"within_range", "improvement", "regression"} for item in comparisons):
+        return "unproven"
+    return "within_expected_range"
+
+
 def _fmt_path(path_value: str | None) -> str:
     return path_value or "n/a"
 
@@ -76,6 +99,8 @@ def write_review(
     findings_bundle: dict[str, object],
     lane_classifications: dict[str, str],
     exceptions_bundle: dict[str, object] | None,
+    efficiency_manifest: dict[str, object] | None,
+    efficiency_baseline_artifact: dict[str, object] | None,
     output_path: Path,
 ) -> None:
     lines: list[str] = [
@@ -167,6 +192,68 @@ def write_review(
                 )
         else:
             lines.append("- none")
+
+    if "efficiency" in run_artifact["lanes"]:
+        command_results = [CommandResult(**item) for item in evidence_bundles["efficiency"]["command_results"]]
+        skipped_or_blocked = [item for item in command_results if item.status in {"skipped", "blocked_by_missing_tool"}]
+        efficiency_findings = [
+            item for item in findings_bundle["era_findings"] if item["lane"] == "efficiency"
+        ]
+        comparisons = (efficiency_baseline_artifact or {}).get("comparisons", [])
+        lines.extend(
+            [
+                "",
+                "## Efficiency Lane",
+                f"Classification: `{lane_classifications['efficiency']}`",
+                "",
+                "### Workload Manifest",
+                f"- manifest path: `{(efficiency_manifest or {}).get('manifest_path', 'n/a')}`",
+                f"- manifest status: `{(efficiency_manifest or {}).get('manifest_status', 'n/a')}`",
+                f"- workloads declared: `{len((efficiency_manifest or {}).get('workloads', []))}`",
+                "",
+                "### Baseline Summary",
+                f"- baseline found: `{(efficiency_baseline_artifact or {}).get('baseline_found', False)}`",
+                f"- baseline source run: `{(efficiency_baseline_artifact or {}).get('baseline_source_run_id') or 'n/a'}`",
+                f"- baseline source commit: `{(efficiency_baseline_artifact or {}).get('baseline_source_commit_sha') or 'n/a'}`",
+                "",
+                "### Workload Summary",
+                "| workload | status | iterations | median ms | variance | baseline status | delta % |",
+                "|---|---|---:|---:|---|---|---:|",
+            ]
+        )
+        comparison_by_workload = {item["workload_id"]: item for item in comparisons}
+        for result in command_results:
+            metadata = result.lane_metadata or {}
+            workload_id = metadata.get("workload_id", result.command_id)
+            timing_summary = metadata.get("timing_summary") or {}
+            comparison = comparison_by_workload.get(workload_id, {})
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        str(metadata.get("workload_label") or workload_id),
+                        result.status,
+                        str(metadata.get("iterations_completed", 0)),
+                        str(timing_summary.get("median_ms", "n/a")),
+                        str(metadata.get("variance_classification", "n/a")),
+                        str(comparison.get("comparison_status", "n/a")),
+                        str(comparison.get("delta_pct", "n/a")),
+                    ]
+                )
+                + " |"
+            )
+        if not command_results:
+            lines.append("| none | n/a | 0 | n/a | n/a | n/a | n/a |")
+
+        lines.extend(["", "### Candidate Findings"])
+        if efficiency_findings:
+            for finding in efficiency_findings:
+                lines.append(
+                    f"- `{finding['finding_type']}` risk=`{finding['risk_level']}` confidence=`{finding['confidence']}` symbols=`{', '.join(finding['target_symbols']) or 'n/a'}`"
+                )
+        else:
+            lines.append("- none")
+
         lines.extend(["", "### Skipped / Blocked Commands"])
         if skipped_or_blocked:
             for item in skipped_or_blocked:

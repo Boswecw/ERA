@@ -41,7 +41,12 @@ def write_centipede_export(
         "projection_candidates": [
             item["finding_id"]
             for item in findings.get("era_findings", [])
-            if item["finding_type"] in {"accuracy_gate_failed", "harmful_redundancy_candidate"}
+            if item["finding_type"]
+            in {
+                "accuracy_gate_failed",
+                "harmful_redundancy_candidate",
+                "efficiency_regression_with_baseline",
+            }
         ],
     }
     write_json(output_path, bundle)

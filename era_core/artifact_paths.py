@@ -33,8 +33,10 @@ class RunPaths:
     evidence_dir: Path
     accuracy_dir: Path
     redundancy_dir: Path
+    efficiency_dir: Path
     accuracy_commands_dir: Path
     redundancy_commands_dir: Path
+    efficiency_commands_dir: Path
     run_json: Path
     target_manifest: Path
     tool_availability: Path
@@ -44,6 +46,9 @@ class RunPaths:
     findings: Path
     test_evidence_bundle: Path
     redundancy_evidence_bundle: Path
+    efficiency_evidence_bundle: Path
+    efficiency_baseline_artifact: Path
+    efficiency_workload_manifest: Path
     centipede_bundle: Path
 
 
@@ -52,15 +57,19 @@ def build_run_paths(run_id: str, artifacts_root: Path | None = None) -> RunPaths
     evidence_dir = root / "evidence"
     accuracy_dir = evidence_dir / "accuracy"
     redundancy_dir = evidence_dir / "redundancy"
+    efficiency_dir = evidence_dir / "efficiency"
     accuracy_commands_dir = accuracy_dir / "commands"
     redundancy_commands_dir = redundancy_dir / "commands"
+    efficiency_commands_dir = efficiency_dir / "commands"
     return RunPaths(
         root=root,
         evidence_dir=evidence_dir,
         accuracy_dir=accuracy_dir,
         redundancy_dir=redundancy_dir,
+        efficiency_dir=efficiency_dir,
         accuracy_commands_dir=accuracy_commands_dir,
         redundancy_commands_dir=redundancy_commands_dir,
+        efficiency_commands_dir=efficiency_commands_dir,
         run_json=root / "run.json",
         target_manifest=root / "target_manifest.json",
         tool_availability=root / "tool_availability.json",
@@ -70,6 +79,9 @@ def build_run_paths(run_id: str, artifacts_root: Path | None = None) -> RunPaths
         findings=root / "findings.json",
         test_evidence_bundle=accuracy_dir / "test_evidence_bundle.json",
         redundancy_evidence_bundle=redundancy_dir / "redundancy_evidence_bundle.json",
+        efficiency_evidence_bundle=efficiency_dir / "efficiency_evidence_bundle.json",
+        efficiency_baseline_artifact=efficiency_dir / "baseline_artifact.json",
+        efficiency_workload_manifest=efficiency_dir / "workload_manifest.json",
         centipede_bundle=root / "centipede_bundle.json",
     )
 
@@ -80,8 +92,10 @@ def ensure_run_dirs(paths: RunPaths) -> None:
         paths.evidence_dir,
         paths.accuracy_dir,
         paths.redundancy_dir,
+        paths.efficiency_dir,
         paths.accuracy_commands_dir,
         paths.redundancy_commands_dir,
+        paths.efficiency_commands_dir,
     ):
         directory.mkdir(parents=True, exist_ok=True)
 

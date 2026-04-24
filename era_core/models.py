@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from typing import Any
 
 
 @dataclass
@@ -15,6 +16,8 @@ class PlannedCommand:
     planned_status: str = "planned"
     reason: str | None = None
     success_exit_codes: tuple[int, ...] = (0,)
+    iterations: int = 1
+    lane_metadata: dict[str, Any] | None = None
 
 
 @dataclass
@@ -36,6 +39,7 @@ class CommandResult:
     tool_name: str
     tool_version: str | None
     blocked_reason: str | None = None
+    lane_metadata: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)

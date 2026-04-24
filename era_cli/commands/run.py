@@ -14,6 +14,14 @@ from era_core.artifact_paths import (
     utc_now_text,
 )
 from era_core.command_runner import run_planned_commands
+from era_core.efficiency import (
+    apply_efficiency_tooling,
+    build_efficiency_baseline_artifact,
+    build_efficiency_normalized_results,
+    collect_efficiency_manifest_tools,
+    detect_efficiency_commands,
+    load_efficiency_workload_manifest,
+)
 from era_core.git_info import (
     capture_git_snapshot,
     capture_target_manifest,
@@ -32,6 +40,7 @@ from era_core.redundancy import (
 )
 from era_core.review_writer import (
     determine_accuracy_classification,
+    determine_efficiency_classification,
     determine_redundancy_classification,
     write_review,
 )
@@ -44,7 +53,7 @@ from era_core.tool_detection import build_tool_availability_report
 from era_core.validation import validate_run_dir
 from era_integrations.centipede_export import write_centipede_export
 
-SUPPORTED_LANES = {"accuracy", "redundancy"}
+SUPPORTED_LANES = {"accuracy", "redundancy", "efficiency"}
 
 
 def register(parser: argparse.ArgumentParser) -> None:
@@ -245,7 +254,7 @@ def _determine_run_status(
     if blocked and not executed:
         return "blocked"
     if blocked or skipped or degraded or any(
-        status in {"unproven", "blocked_by_missing_evidence", "blocked_by_missing_tool"}
+        status in {"unproven", "unstable", "blocked_by_missing_evidence", "blocked_by_missing_tool"}
         for status in lane_classifications.values()
     ):
         return "completed_partial"
@@ -341,7 +350,13 @@ def execute_run(
     repo_id = detect_repo_id(repo_path)
     target_manifest = capture_target_manifest(repo_path, repo_id, pre_snapshot)
 
-    tool_report = build_tool_availability_report(repo_path, repo_id)
+    efficiency_manifest = None
+    extra_tools: list[str] = []
+    if "efficiency" in requested_lanes:
+        efficiency_manifest = load_efficiency_workload_manifest(repo_path, repo_id, era_root=era_root)
+        extra_tools = collect_efficiency_manifest_tools(efficiency_manifest)
+
+    tool_report = build_tool_availability_report(repo_path, repo_id, extra_tools=extra_tools)
     tool_versions = {
         item["tool"]: item["version"]
         for item in tool_report["tools"]
@@ -378,12 +393,20 @@ def execute_run(
                 tool_report["tools"],
             )
         )
+    if "efficiency" in requested_lanes:
+        planned_commands.extend(
+            apply_efficiency_tooling(
+                detect_efficiency_commands(repo_path, efficiency_manifest or {}),
+                tool_report["tools"],
+            )
+        )
 
     command_results = run_planned_commands(
         planned_commands,
         {
             "accuracy": run_paths.accuracy_commands_dir,
             "redundancy": run_paths.redundancy_commands_dir,
+            "efficiency": run_paths.efficiency_commands_dir,
         },
         tool_versions,
     )
@@ -399,6 +422,7 @@ def execute_run(
 
     accuracy_results = [item for item in command_results if item.lane == "accuracy"]
     redundancy_results = [item for item in command_results if item.lane == "redundancy"]
+    efficiency_results = [item for item in command_results if item.lane == "efficiency"]
     normalized_results: list[dict[str, Any]] = []
 
     if accuracy_results:
@@ -419,6 +443,29 @@ def execute_run(
                 command_results=redundancy_results,
                 raw_artifacts=raw_artifacts,
                 exceptions=exceptions_bundle["exceptions"],
+                normalizer_version=__version__,
+            )
+        )
+
+    baseline_artifact = None
+    if "efficiency" in requested_lanes:
+        baseline_artifact = build_efficiency_baseline_artifact(
+            run_id=run_id,
+            repo_id=repo_id,
+            current_commit_sha=pre_snapshot["head"] or "UNCOMMITTED",
+            branch=pre_snapshot["branch"],
+            manifest=efficiency_manifest or {},
+            command_results=efficiency_results,
+            artifacts_root=run_paths.root.parent,
+            baseline_ref=baseline_ref,
+            baseline_commit=baseline_commit,
+        )
+        normalized_results.extend(
+            build_efficiency_normalized_results(
+                run_id=run_id,
+                command_results=efficiency_results,
+                raw_artifacts=raw_artifacts,
+                baseline_artifact=baseline_artifact,
                 normalizer_version=__version__,
             )
         )
@@ -466,6 +513,25 @@ def execute_run(
         evidence_bundles["redundancy"] = redundancy_bundle
         write_json(run_paths.redundancy_evidence_bundle, redundancy_bundle)
         evidence_bundle_refs.append(str(run_paths.redundancy_evidence_bundle))
+    if "efficiency" in requested_lanes:
+        efficiency_bundle = _build_lane_evidence_bundle(
+            schema_version="EfficiencyEvidenceBundle.v1",
+            run_id=run_id,
+            repo_id=repo_id,
+            lane="efficiency",
+            command_results=efficiency_results,
+            raw_artifacts=raw_artifacts,
+            normalized_results=normalized_results,
+            extra={
+                "workload_manifest": efficiency_manifest or {},
+                "baseline_artifact_ref": str(run_paths.efficiency_baseline_artifact),
+            },
+        )
+        evidence_bundles["efficiency"] = efficiency_bundle
+        write_json(run_paths.efficiency_workload_manifest, efficiency_manifest or {})
+        write_json(run_paths.efficiency_baseline_artifact, baseline_artifact or {})
+        write_json(run_paths.efficiency_evidence_bundle, efficiency_bundle)
+        evidence_bundle_refs.append(str(run_paths.efficiency_evidence_bundle))
 
     findings_bundle = {
         "schema_version": "ERAFindingSet.v1",
@@ -492,6 +558,12 @@ def execute_run(
         lane_classifications["redundancy"] = determine_redundancy_classification(
             redundancy_results,
             [item for item in findings if item["lane"] == "redundancy"],
+        )
+    if "efficiency" in requested_lanes:
+        lane_classifications["efficiency"] = determine_efficiency_classification(
+            efficiency_results,
+            baseline_artifact or {},
+            [item for item in findings if item["lane"] == "efficiency"],
         )
 
     completed_at = utc_now_text()
@@ -559,6 +631,8 @@ def execute_run(
         findings_bundle=findings_bundle,
         lane_classifications=lane_classifications,
         exceptions_bundle=exceptions_bundle,
+        efficiency_manifest=efficiency_manifest,
+        efficiency_baseline_artifact=baseline_artifact,
         output_path=run_paths.review,
     )
 

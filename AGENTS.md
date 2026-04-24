@@ -30,6 +30,15 @@ Honor operator-approved intentional redundancy exceptions.
 Keep redundancy findings as review candidates, not defects.
 ```
 
+Allowed evaluation behavior in ERA-01C:
+
+```text
+Load manifest-defined efficiency workloads.
+Run repeated timing measurements with the internal timer.
+Record variance classifications and baseline comparisons.
+Avoid regression or improvement claims when baseline evidence is absent.
+```
+
 Operator notes:
 
 ```text

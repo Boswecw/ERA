@@ -69,6 +69,8 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
         required_lane_artifacts["accuracy"] = "evidence/accuracy/test_evidence_bundle.json"
     if "redundancy" in lanes:
         required_lane_artifacts["redundancy"] = "evidence/redundancy/redundancy_evidence_bundle.json"
+    if "efficiency" in lanes:
+        required_lane_artifacts["efficiency"] = "evidence/efficiency/efficiency_evidence_bundle.json"
 
     evidence_bundles: dict[str, dict[str, Any]] = {}
     for lane, relative in required_lane_artifacts.items():
@@ -105,6 +107,24 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
                 errors.append("Selection artifact run_id does not match run.json.")
             if "schema_version" not in selection:
                 errors.append("Selection artifact is missing schema_version.")
+
+    if "efficiency" in lanes:
+        manifest_path = run_dir / "evidence/efficiency/workload_manifest.json"
+        baseline_path = run_dir / "evidence/efficiency/baseline_artifact.json"
+        if not manifest_path.exists():
+            errors.append("Efficiency runs require evidence/efficiency/workload_manifest.json.")
+        else:
+            manifest = _load_json(manifest_path)
+            if "schema_version" not in manifest:
+                errors.append("Efficiency workload manifest artifact is missing schema_version.")
+        if not baseline_path.exists():
+            errors.append("Efficiency runs require evidence/efficiency/baseline_artifact.json.")
+        else:
+            baseline = _load_json(baseline_path)
+            if "schema_version" not in baseline:
+                errors.append("Efficiency baseline artifact is missing schema_version.")
+            if baseline.get("run_id") != run_artifact["run_id"]:
+                errors.append("Efficiency baseline artifact run_id does not match run.json.")
 
     for field in (
         "target_manifest_path",

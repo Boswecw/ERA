@@ -1,0 +1,42 @@
+{
+  "schema_version": "EfficiencyWorkloadManifest.v1",
+  "repo_id": "Forge_Command",
+  "description": "Initial ERA-01C workload proof for Forge_Command.",
+  "baseline_selection_policy": "latest_prior_efficiency_run",
+  "workloads": [
+    {
+      "workload_id": "git_status_short",
+      "label": "git status --short",
+      "description": "Lightweight operator-loop repository status workload.",
+      "category": "operator_time_burden",
+      "command": [
+        "git",
+        "status",
+        "--short"
+      ],
+      "cwd_subpath": ".",
+      "runner": "internal_timer",
+      "iterations": 3,
+      "regression_threshold_pct": 50.0,
+      "improvement_threshold_pct": 50.0
+    },
+    {
+      "workload_id": "cargo_metadata",
+      "label": "cargo metadata",
+      "description": "Rust metadata resolution workload.",
+      "category": "build_time_proxy",
+      "command": [
+        "cargo",
+        "metadata",
+        "--manifest-path",
+        "src-tauri/Cargo.toml",
+        "--no-deps"
+      ],
+      "cwd_subpath": ".",
+      "runner": "internal_timer",
+      "iterations": 3,
+      "regression_threshold_pct": 25.0,
+      "improvement_threshold_pct": 25.0
+    }
+  ]
+}

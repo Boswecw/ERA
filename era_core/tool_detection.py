@@ -8,6 +8,12 @@ from pathlib import Path
 from era_core.artifact_paths import utc_now_text
 
 
+def _default_version_command(tool: str) -> list[str]:
+    if tool == "python":
+        return [sys.executable, "--version"]
+    return [tool, "--version"]
+
+
 def _probe_tool(tool: str, version_command: list[str], applicable: bool) -> dict[str, object]:
     if not applicable:
         return {
@@ -65,7 +71,11 @@ def _probe_tool(tool: str, version_command: list[str], applicable: bool) -> dict
     }
 
 
-def build_tool_availability_report(repo_path: Path, repo_id: str) -> dict[str, object]:
+def build_tool_availability_report(
+    repo_path: Path,
+    repo_id: str,
+    extra_tools: list[str] | None = None,
+) -> dict[str, object]:
     has_cargo_manifest = (repo_path / "src-tauri" / "Cargo.toml").exists() or (repo_path / "Cargo.toml").exists()
     has_package_json = (repo_path / "package.json").exists()
     tools = [
@@ -75,7 +85,14 @@ def build_tool_availability_report(repo_path: Path, repo_id: str) -> dict[str, o
         _probe_tool("bun", ["bun", "--version"], applicable=has_package_json),
         _probe_tool("jscpd", ["jscpd", "--version"], applicable=has_package_json),
         _probe_tool("knip", ["knip", "--version"], applicable=has_package_json),
+        _probe_tool("hyperfine", ["hyperfine", "--version"], applicable=True),
     ]
+    existing = {item["tool"] for item in tools}
+    for tool in extra_tools or []:
+        if tool in existing:
+            continue
+        tools.append(_probe_tool(tool, _default_version_command(tool), applicable=True))
+        existing.add(tool)
     return {
         "schema_version": "ERAToolAvailabilityReport.v1",
         "repo_id": repo_id,
