@@ -630,6 +630,246 @@ def _build_centipede_evidence_bundles(
     return mapped
 
 
+
+_ACTIONABLE_SELF_HEALING_FINDING_TYPES = {
+    "accuracy_gate_failed",
+    "harmful_redundancy_candidate",
+    "efficiency_regression_with_baseline",
+}
+
+_BLOCKED_SELF_HEALING_EVIDENCE_STRENGTHS = {
+    "none",
+    "advisory_only",
+    "blocked",
+    "unproven",
+}
+
+
+def _severity_from_risk(risk_level: str | None) -> str:
+    mapping = {
+        "critical": "critical",
+        "high": "high",
+        "medium": "medium",
+        "moderate": "medium",
+        "low": "low",
+        "info": "info",
+        "none": "info",
+    }
+    return mapping.get((risk_level or "").lower(), "medium")
+
+
+def _projection_evidence_bundle_id(run_artifact: dict[str, Any], finding: dict[str, Any]) -> str:
+    return f"era-evidence:{run_artifact['run_id']}:{finding.get('finding_id') or 'unknown_finding'}"
+
+
+def _suggested_remediation_kind(finding: dict[str, Any]) -> str | None:
+    finding_type = finding.get("finding_type")
+    if finding_type == "accuracy_gate_failed":
+        return "verification_failure_triage"
+    if finding_type == "harmful_redundancy_candidate":
+        return "redundancy_review"
+    if finding_type == "efficiency_regression_with_baseline":
+        return "efficiency_regression_review"
+    return None
+
+
+def _proposal_required_for_finding(finding: dict[str, Any]) -> bool:
+    finding_type = finding.get("finding_type")
+    target_files = finding.get("target_files") or []
+    if finding_type == "accuracy_gate_failed":
+        return False
+    if finding_type in {"harmful_redundancy_candidate", "efficiency_regression_with_baseline"}:
+        return bool(target_files)
+    return False
+
+
+def _execution_reach_for_finding(finding: dict[str, Any]) -> str:
+    lane = finding.get("lane")
+    if lane == "accuracy":
+        return "test_only"
+    if lane in {"redundancy", "efficiency"}:
+        return "build_only"
+    return "unknown"
+
+
+def _proof_type_for_finding(finding: dict[str, Any]) -> str:
+    if finding.get("finding_type") == "accuracy_gate_failed":
+        return "dynamic_reproduction"
+    return "static_evidence"
+
+
+def _finding_has_raw_evidence(finding: dict[str, Any]) -> bool:
+    refs = finding.get("raw_evidence_refs") or []
+    hashes = finding.get("raw_evidence_hashes") or []
+    return bool(refs) and bool(hashes) and len(refs) == len(hashes)
+
+
+def _is_self_healing_projection_eligible(finding: dict[str, Any]) -> bool:
+    finding_type = finding.get("finding_type")
+    if finding_type not in _ACTIONABLE_SELF_HEALING_FINDING_TYPES:
+        return False
+    if finding.get("operator_decision") == "accepted_exception":
+        return False
+    if finding.get("blocked_reason"):
+        return False
+    if not _finding_has_raw_evidence(finding):
+        return False
+    if finding.get("safe_to_autofix") is not False:
+        return False
+    if finding.get("requires_operator_review") is False:
+        return False
+
+    evidence_strength = str(finding.get("evidence_strength") or "").lower()
+    if evidence_strength in _BLOCKED_SELF_HEALING_EVIDENCE_STRENGTHS:
+        return False
+
+    confidence = str(finding.get("confidence") or "").lower()
+    if confidence not in {"high", "exact"}:
+        return False
+
+    risk = str(finding.get("risk_level") or "").lower()
+    if risk not in {"high", "critical"}:
+        return False
+
+    return bool(_target_scope_for_finding(finding))
+
+
+def _supporting_lane_ids_for_finding(run_artifact: dict[str, Any], finding: dict[str, Any]) -> list[str]:
+    lane = finding.get("lane") or "unknown"
+    return [f"era-lane:{run_artifact['run_id']}:{_lane_name(str(lane))}"]
+
+
+def _supporting_trace_ids_for_finding(run_artifact: dict[str, Any], finding: dict[str, Any]) -> list[str]:
+    command_id = _finding_command_id(finding)
+    if command_id:
+        return [f"era-trace:{run_artifact['run_id']}:{command_id}"]
+    return [f"era-trace:{run_artifact['run_id']}:read_only_invariant"]
+
+
+def _build_self_healing_projection(
+    *,
+    run_artifact: dict[str, Any],
+    finding: dict[str, Any],
+) -> dict[str, Any]:
+    finding_id = finding.get("finding_id") or "unknown_finding"
+    scope = _target_scope_for_finding(finding)[0]
+    produced_at = _observed_at(run_artifact)
+    return {
+        "projection_id": f"era-sh-projection:{run_artifact['run_id']}:{finding_id}",
+        "record_type": "centipede.self_healing_projection",
+        "schema_version": "centipede.self_healing_projection.v1",
+        "source_run_id": run_artifact["run_id"],
+        "repository_id": run_artifact["repo_id"],
+        "revision_anchor": _revision_anchor(run_artifact),
+        "run_class": "verification_only_run",
+        "finding_id": finding_id,
+        "finding_class": finding.get("finding_type") or "unknown",
+        "severity": _severity_from_risk(finding.get("risk_level")),
+        "confidence_posture": _confidence_from_finding(finding.get("confidence")),
+        "exploitability_posture": "unknown",
+        "execution_reach": _execution_reach_for_finding(finding),
+        "trigger_requirements": [
+            "operator_review",
+            "centipede_import_receipt",
+            "self_healing_intake_receipt",
+        ],
+        "proof_type": _proof_type_for_finding(finding),
+        "affected_target_type": scope["target_type"],
+        "affected_target_key": scope["target_key"],
+        "evidence_bundle_id": _projection_evidence_bundle_id(run_artifact, finding),
+        "supporting_lane_ids": _supporting_lane_ids_for_finding(run_artifact, finding),
+        "supporting_trace_ids": _supporting_trace_ids_for_finding(run_artifact, finding),
+        "suggested_remediation_kind": _suggested_remediation_kind(finding),
+        "proposal_required": _proposal_required_for_finding(finding),
+        "operator_review_required": True,
+        "blocked_reason": None,
+        "produced_at": produced_at,
+        "valid_until": None,
+        "stale_after": None,
+        "superseded_by": None,
+        "invalidated_reason": None,
+        "producer_id": _PRODUCER_ID,
+        "producer_version": run_artifact.get("runner_version") or "unknown",
+    }
+
+
+def _build_self_healing_projections(
+    *,
+    run_artifact: dict[str, Any],
+    findings: dict[str, Any],
+) -> list[dict[str, Any]]:
+    era_findings = findings.get("era_findings", []) if isinstance(findings, dict) else []
+    projections: list[dict[str, Any]] = []
+    for finding in era_findings:
+        if not isinstance(finding, dict):
+            continue
+        if not _is_self_healing_projection_eligible(finding):
+            continue
+        projections.append(
+            _build_self_healing_projection(
+                run_artifact=run_artifact,
+                finding=finding,
+            )
+        )
+    return projections
+
+
+def _validate_self_healing_projection_contracts(bundle: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    run = bundle.get("run") or {}
+    run_id = run.get("run_id")
+    repository_id = run.get("repository_id")
+    revision_anchor = run.get("revision_anchor")
+    evidence_bundle_ids = {
+        item.get("evidence_bundle_id")
+        for item in bundle.get("evidence_bundles", [])
+        if isinstance(item, dict)
+    }
+    lane_ids = {
+        item.get("record_id")
+        for item in bundle.get("lane_admissions", [])
+        if isinstance(item, dict)
+    }
+    trace_ids = {
+        item.get("trace_id")
+        for item in bundle.get("decision_traces", [])
+        if isinstance(item, dict)
+    }
+
+    registry_projections = bundle.get("registry_projections", [])
+    if registry_projections:
+        errors.append("centipede_bundle.json registry_projections must remain empty until registry-specific rules exist.")
+
+    for projection in bundle.get("self_healing_projections", []):
+        if not isinstance(projection, dict):
+            errors.append("Self-Healing projection must be an object.")
+            continue
+        projection_id = projection.get("projection_id", "unknown")
+        if projection.get("schema_version") != "centipede.self_healing_projection.v1":
+            errors.append(f"Self-Healing projection {projection_id} has invalid schema_version.")
+        if projection.get("record_type") != "centipede.self_healing_projection":
+            errors.append(f"Self-Healing projection {projection_id} has invalid record_type.")
+        if projection.get("source_run_id") != run_id:
+            errors.append(f"Self-Healing projection {projection_id} source_run_id does not match run.run_id.")
+        if projection.get("repository_id") != repository_id:
+            errors.append(f"Self-Healing projection {projection_id} repository_id does not match run.repository_id.")
+        if projection.get("revision_anchor") != revision_anchor:
+            errors.append(f"Self-Healing projection {projection_id} revision_anchor does not match run.revision_anchor.")
+        if projection.get("operator_review_required") is not True:
+            errors.append(f"Self-Healing projection {projection_id} must require operator review.")
+        if projection.get("blocked_reason") is not None:
+            errors.append(f"Self-Healing projection {projection_id} must not carry blocked_reason.")
+        if projection.get("evidence_bundle_id") not in evidence_bundle_ids:
+            errors.append(f"Self-Healing projection {projection_id} references missing evidence_bundle_id.")
+        for lane_id in projection.get("supporting_lane_ids", []):
+            if lane_id not in lane_ids:
+                errors.append(f"Self-Healing projection {projection_id} references missing supporting lane {lane_id}.")
+        for trace_id in projection.get("supporting_trace_ids", []):
+            if trace_id not in trace_ids:
+                errors.append(f"Self-Healing projection {projection_id} references missing supporting trace {trace_id}.")
+    return errors
+
+
 def write_centipede_export(
     *,
     run_artifact: dict[str, Any],
@@ -640,8 +880,8 @@ def write_centipede_export(
 ) -> dict[str, Any]:
     """Write a ForgeCommand-compatible CentipedeIntakeBundle.
 
-    ERA-CENT-01 exports evidence only. Self-Healing projections remain empty
-    until ERA-CENT-02 projection eligibility is implemented.
+    ERA-CENT-02 emits conservative, evidence-backed Self-Healing projections.
+    ERA remains read-only and never executes or writes repairs.
     """
 
     bundle = {
@@ -663,7 +903,10 @@ def write_centipede_export(
             evidence_bundles=evidence_bundles,
             findings=findings,
         ),
-        "self_healing_projections": [],
+        "self_healing_projections": _build_self_healing_projections(
+            run_artifact=run_artifact,
+            findings=findings,
+        ),
         "registry_projections": [],
         "final_runtime_mode": _runtime_mode(run_artifact.get("status")),
         "final_runtime_mode_observed_at": run_artifact.get("completed_at") or _observed_at(run_artifact),
@@ -873,10 +1116,10 @@ def validate_centipede_export_bundle(
             local_errors.append(f"centipede evidence bundle #{index} evidence_payloads must be a list.")
 
     # ERA-CENT-01 exports evidence only. Projection generation is intentionally deferred.
-    if bundle.get("self_healing_projections"):
-        local_errors.append("ERA-CENT-01 must not emit self_healing_projections.")
     if bundle.get("registry_projections"):
         local_errors.append("ERA-CENT-01 must not emit registry_projections.")
+
+    local_errors.extend(_validate_self_healing_projection_contracts(bundle))
 
     if errors is not None:
         errors.extend(local_errors)

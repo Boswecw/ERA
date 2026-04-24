@@ -72,7 +72,32 @@ def _accuracy_evidence_bundle() -> dict:
                 "blocked_reason": None,
             }
         ],
-        "tool_raw_artifacts": [],
+        "tool_raw_artifacts": [
+            {
+                "schema_version": "ToolRawArtifact.v1",
+                "raw_artifact_id": "cargo_check:stdout",
+                "run_id": "20260424T120000Z-test0001",
+                "command_id": "cargo_check",
+                "tool_name": "cargo",
+                "tool_version": "cargo 1.75.0",
+                "artifact_kind": "stdout",
+                "path": "/tmp/cargo_check.stdout.txt",
+                "sha256": "0" * 64,
+                "created_at": "2026-04-24T12:00:20Z",
+            },
+            {
+                "schema_version": "ToolRawArtifact.v1",
+                "raw_artifact_id": "cargo_check:stderr",
+                "run_id": "20260424T120000Z-test0001",
+                "command_id": "cargo_check",
+                "tool_name": "cargo",
+                "tool_version": "cargo 1.75.0",
+                "artifact_kind": "stderr",
+                "path": "/tmp/cargo_check.stderr.txt",
+                "sha256": "1" * 64,
+                "created_at": "2026-04-24T12:00:20Z",
+            },
+        ],
         "tool_normalized_results": [],
         "created_at": "2026-04-24T12:01:00Z",
         "sha256": "2" * 64,
@@ -137,21 +162,79 @@ class CentipedeExportTests(unittest.TestCase):
             self.assertEqual(bundle["run"]["run_class"], "verification_only_run")
             self.assertEqual(bundle["final_runtime_mode"], "completed_partial")
 
-            self.assertIn("lane_admissions", bundle)
-            self.assertIn("decision_traces", bundle)
-            self.assertIn("evidence_bundles", bundle)
-            self.assertIn("self_healing_projections", bundle)
-            self.assertIn("registry_projections", bundle)
-
             self.assertEqual(bundle["lane_admissions"][0]["lane_name"], "era_accuracy")
             self.assertEqual(bundle["decision_traces"][0]["decision_stage"], "era_accuracy_gate")
             self.assertEqual(bundle["evidence_bundles"][0]["finding_id"], "finding:cargo_check:1")
             self.assertEqual(bundle["evidence_bundles"][0]["confidence_posture"], "high")
-            self.assertEqual(bundle["self_healing_projections"], [])
+
+            self.assertEqual(len(bundle["self_healing_projections"]), 1)
+            projection = bundle["self_healing_projections"][0]
+            self.assertEqual(projection["schema_version"], "centipede.self_healing_projection.v1")
+            self.assertEqual(projection["record_type"], "centipede.self_healing_projection")
+            self.assertEqual(projection["finding_id"], "finding:cargo_check:1")
+            self.assertEqual(projection["finding_class"], "accuracy_gate_failed")
+            self.assertEqual(projection["severity"], "high")
+            self.assertEqual(projection["confidence_posture"], "high")
+            self.assertEqual(projection["execution_reach"], "test_only")
+            self.assertEqual(projection["proof_type"], "dynamic_reproduction")
+            self.assertEqual(projection["affected_target_type"], "command")
+            self.assertEqual(projection["affected_target_key"], "cargo_check")
+            self.assertEqual(
+                projection["evidence_bundle_id"],
+                bundle["evidence_bundles"][0]["evidence_bundle_id"],
+            )
+            self.assertEqual(
+                projection["supporting_lane_ids"],
+                ["era-lane:20260424T120000Z-test0001:era_accuracy"],
+            )
+            self.assertEqual(
+                projection["supporting_trace_ids"],
+                ["era-trace:20260424T120000Z-test0001:cargo_check"],
+            )
+            self.assertTrue(projection["operator_review_required"])
+            self.assertFalse(projection["proposal_required"])
+            self.assertIsNone(projection["blocked_reason"])
+            self.assertEqual(bundle["registry_projections"], [])
 
             self.assertNotIn("lane_results", bundle)
             self.assertNotIn("projection_candidates", bundle)
             self.assertTrue((run_dir / "centipede_bundle.json").exists())
+
+    def test_missing_raw_evidence_stays_evidence_only(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            run_dir = Path(temp_root)
+            findings = _findings_bundle()
+            findings["era_findings"][0]["raw_evidence_refs"] = []
+            findings["era_findings"][0]["raw_evidence_hashes"] = []
+
+            bundle = write_centipede_export(
+                run_artifact=_run_artifact(run_dir),
+                selection_artifact=None,
+                evidence_bundles={"accuracy": _accuracy_evidence_bundle()},
+                findings=findings,
+                output_path=run_dir / "centipede_bundle.json",
+            )
+
+            self.assertEqual(bundle["evidence_bundles"][0]["finding_id"], "finding:cargo_check:1")
+            self.assertEqual(bundle["self_healing_projections"], [])
+
+    def test_intentional_exception_stays_evidence_only(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_root:
+            run_dir = Path(temp_root)
+            findings = _findings_bundle()
+            findings["era_findings"][0]["operator_decision"] = "accepted_exception"
+            findings["era_findings"][0]["lane_details"]["exception_id"] = "exception:test"
+
+            bundle = write_centipede_export(
+                run_artifact=_run_artifact(run_dir),
+                selection_artifact=None,
+                evidence_bundles={"accuracy": _accuracy_evidence_bundle()},
+                findings=findings,
+                output_path=run_dir / "centipede_bundle.json",
+            )
+
+            self.assertEqual(bundle["evidence_bundles"][0]["finding_id"], "finding:cargo_check:1")
+            self.assertEqual(bundle["self_healing_projections"], [])
 
 
 if __name__ == "__main__":
