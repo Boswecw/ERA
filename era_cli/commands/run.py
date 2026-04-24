@@ -217,9 +217,10 @@ def _determine_run_status(command_results: list[CommandResult], accuracy_classif
     executed = [item for item in command_results if item.status not in {"skipped", "blocked_by_missing_tool"}]
     blocked = [item for item in command_results if item.status == "blocked_by_missing_tool"]
     skipped = [item for item in command_results if item.status == "skipped"]
+    degraded = [item for item in command_results if item.status in {"failed_to_execute", "timed_out"}]
     if blocked and not executed:
         return "blocked"
-    if blocked or skipped or accuracy_classification == "unproven":
+    if blocked or skipped or degraded or accuracy_classification in {"unproven", "blocked_by_missing_evidence"}:
         return "completed_partial"
     return "completed"
 

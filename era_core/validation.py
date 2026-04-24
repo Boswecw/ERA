@@ -80,8 +80,16 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
 
     for result in evidence_bundle["command_results"]:
         if result["status"] not in {"skipped", "blocked_by_missing_tool"}:
-            stdout_path = Path(result["stdout_path"])
-            stderr_path = Path(result["stderr_path"])
+            stdout_value = result.get("stdout_path")
+            stderr_value = result.get("stderr_path")
+            if not stdout_value:
+                errors.append(f"Missing stdout artifact for {result['command_id']}")
+            if not stderr_value:
+                errors.append(f"Missing stderr artifact for {result['command_id']}")
+                continue
+
+            stdout_path = Path(stdout_value)
+            stderr_path = Path(stderr_value)
             if not stdout_path.exists():
                 errors.append(f"Missing stdout artifact for {result['command_id']}")
             if not stderr_path.exists():
