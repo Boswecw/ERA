@@ -66,6 +66,35 @@ Record directly changed test files as advisory selected tests only.
 Fall back to full configured accuracy gates unless selection safety supports narrower proof.
 ```
 
+Allowed evaluation behavior in ERA-CENT-01:
+
+```text
+Export ERA evidence into centipede.intake.v1 bundle shape.
+Map ERA runs, lane admissions, decision traces, and evidence bundles.
+Fail ERA validation when centipede_bundle.json has broken run bindings.
+```
+
+Allowed evaluation behavior in ERA-CENT-02:
+
+```text
+Emit Self-Healing projections only for actionable evidence-backed findings.
+Keep blocked, informational, intentional-exception, and evidence-missing findings evidence-only.
+Require operator_review_required=true on every projection.
+Set proposal_required only when bounded remediation is plausible.
+Include evidence bundle, supporting lane, and supporting trace references on every projection.
+Keep registry projection arrays empty until registry-specific rules exist.
+```
+
+Allowed integration behavior in ERA-SH-01:
+
+```text
+Feed ERA-originated Self-Healing projections only through Centipede intake.
+Require Self-Healing incidents to retain raw_evidence_sha256 and normalized_digest_sha256.
+Require projection receipts when projections are consumed or blocked.
+Require DoppelCore intake receipts when a projection maps to a Self-Healing incident.
+Keep operator review mandatory; no repair action is executed by ERA or the feed proof.
+```
+
 Operator notes:
 
 ```text

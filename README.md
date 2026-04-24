@@ -11,6 +11,9 @@ ERA-01C — Efficiency Workload Proof
 ERA-02  — Unified Finding Normalization
 ERA-03  — Evidence Hash Chain
 ERA-04  — Differential / RTS Scaffolding
+ERA-CENT-01 — ERA-to-Centipede Bundle Export
+ERA-CENT-02 — Self-Healing Projection Rules
+ERA-SH-01 — Self-Healing Incident Mapping Proof
 ```
 
 Core doctrine:
@@ -116,3 +119,30 @@ full-gate fallback rationale
 ```
 
 ERA-04 records Level 1 changed-file metadata and an advisory Level 2 path for directly changed test files. It still falls back to full configured accuracy gates unless a future targeted runner can prove a safer selective execution path.
+
+## Centipede Export
+
+Every ERA run writes:
+
+```text
+ERA/artifacts/era-runs/<run_id>/centipede_bundle.json
+```
+
+ERA-CENT-01 emits a `centipede.intake.v1` bundle with a Centipede run record, lane admissions, decision traces, and evidence bundles mapped from ERA findings.
+
+ERA-CENT-02 adds conservative Self-Healing projections. ERA emits `centipede.self_healing_projection.v1` only for actionable findings with raw evidence, known affected scope, supporting lane refs, and supporting trace refs. Blocked findings, missing-evidence findings, informational findings, and intentional exceptions remain evidence-only. Every projection requires operator review; proposal generation is required only when a bounded remediation path is plausible. Registry projection arrays remain empty until registry-specific rules exist.
+
+## Self-Healing Feed
+
+ERA-SH-01 proves the governed feed path:
+
+```text
+ERA centipede_bundle.json
+ForgeCommand Centipede import
+Centipede self_healing projection outbox
+Self-Healing projection intake
+Self-Healing incident queue
+DoppelCore intake receipt
+```
+
+ForgeCommand returns the projection receipt, mapped incident, raw evidence digest, normalized digest, and DoppelCore intake receipt when an ERA projection is consumed.

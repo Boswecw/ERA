@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from era_core.hashing import sha256_json, sha256_path
+from era_integrations.centipede_export import validate_centipede_export_bundle
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -344,6 +345,7 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
         "tool_availability.json",
         "review.md",
         "findings.json",
+        "centipede_bundle.json",
         "hashes.json",
     ]
     for relative in required_files:
@@ -357,6 +359,7 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
     target_manifest = _load_json(run_dir / "target_manifest.json")
     tool_report = _load_json(run_dir / "tool_availability.json")
     findings = _load_json(run_dir / "findings.json")
+    centipede_bundle = _load_json(run_dir / "centipede_bundle.json")
     hashes = _load_json(run_dir / "hashes.json")
     lanes = run_artifact.get("lanes", [])
 
@@ -384,6 +387,7 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
         "target_manifest.json": target_manifest,
         "tool_availability.json": tool_report,
         "findings.json": findings,
+        "centipede_bundle.json": centipede_bundle,
         **{relative: evidence_bundles[lane] for lane, relative in required_lane_artifacts.items()},
     }
 
@@ -440,6 +444,9 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
     for path_ref in run_artifact.get("finding_refs", []):
         if not Path(path_ref).exists():
             errors.append(f"Referenced findings file missing: {path_ref}")
+
+    for error in validate_centipede_export_bundle(centipede_bundle):
+        errors.append(error)
 
     for bundle in evidence_bundles.values():
         _validate_command_artifacts(bundle=bundle, errors=errors)
