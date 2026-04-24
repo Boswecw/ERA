@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from era_core.artifact_paths import resolve_era_root, utc_now_text
+from era_core.contracts import build_tool_normalized_result
 from era_core.hashing import sha256_json
 from era_core.models import CommandResult, PlannedCommand
 
@@ -334,6 +335,7 @@ def build_efficiency_normalized_results(
                 parsed_findings.append(
                     {
                         "finding_type": "efficiency_regression_with_baseline",
+                        "summary": "Efficiency workload regressed relative to the selected baseline.",
                         "target_files": [],
                         "target_symbols": [metadata.get("workload_label") or workload_id],
                         "risk_level": "high" if delta_pct >= 25.0 else "medium",
@@ -341,24 +343,31 @@ def build_efficiency_normalized_results(
                         "evidence_strength": "high",
                         "recommended_action": "operator_review",
                         "blocked_reason": None,
+                        "lane_details": {
+                            "workload_id": workload_id,
+                            "workload_label": metadata.get("workload_label"),
+                            "comparison_status": status,
+                            "delta_pct": delta_pct,
+                            "variance_classification": metadata.get("variance_classification"),
+                            "timing_summary": metadata.get("timing_summary"),
+                        },
                     }
                 )
 
-        record = {
-            "schema_version": "ToolNormalizedResult.v1",
-            "normalized_result_id": f"normalized:{result.command_id}",
-            "run_id": run_id,
-            "raw_artifact_refs": raw_refs_by_command.get(result.command_id, []),
-            "normalizer_name": "era_efficiency_normalizer",
-            "normalizer_version": normalizer_version,
-            "tool_name": result.tool_name,
-            "tool_version": result.tool_version,
-            "summary_status": result.status,
-            "parsed_findings": parsed_findings,
-            "parse_warnings": parse_warnings,
-            "parse_errors": [],
-            "created_at": result.completed_at,
-        }
-        record["sha256"] = sha256_json(record)
-        normalized_results.append(record)
+        normalized_results.append(
+            build_tool_normalized_result(
+                run_id=run_id,
+                command_id=result.command_id,
+                raw_artifact_refs=raw_refs_by_command.get(result.command_id, []),
+                normalizer_name="era_efficiency_normalizer",
+                normalizer_version=normalizer_version,
+                tool_name=result.tool_name,
+                tool_version=result.tool_version,
+                summary_status=result.status,
+                parsed_findings=parsed_findings,
+                parse_warnings=parse_warnings,
+                parse_errors=[],
+                created_at=result.completed_at,
+            )
+        )
     return normalized_results

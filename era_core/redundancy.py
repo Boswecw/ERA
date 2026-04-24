@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from era_core.artifact_paths import resolve_era_root, utc_now_text
-from era_core.hashing import sha256_json
+from era_core.contracts import build_tool_normalized_result
 from era_core.models import CommandResult, PlannedCommand
 
 
@@ -291,21 +291,20 @@ def build_redundancy_normalized_results(
                 finding["exception_id"] = exception.get("exception_id")
             adjusted_findings.append(finding)
 
-        record = {
-            "schema_version": "ToolNormalizedResult.v1",
-            "normalized_result_id": f"normalized:{result.command_id}",
-            "run_id": run_id,
-            "raw_artifact_refs": raw_refs_by_command.get(result.command_id, []),
-            "normalizer_name": "era_redundancy_normalizer",
-            "normalizer_version": normalizer_version,
-            "tool_name": result.tool_name,
-            "tool_version": result.tool_version,
-            "summary_status": result.status,
-            "parsed_findings": adjusted_findings,
-            "parse_warnings": parse_warnings,
-            "parse_errors": [],
-            "created_at": result.completed_at,
-        }
-        record["sha256"] = sha256_json(record)
-        normalized_results.append(record)
+        normalized_results.append(
+            build_tool_normalized_result(
+                run_id=run_id,
+                command_id=result.command_id,
+                raw_artifact_refs=raw_refs_by_command.get(result.command_id, []),
+                normalizer_name="era_redundancy_normalizer",
+                normalizer_version=normalizer_version,
+                tool_name=result.tool_name,
+                tool_version=result.tool_version,
+                summary_status=result.status,
+                parsed_findings=adjusted_findings,
+                parse_warnings=parse_warnings,
+                parse_errors=[],
+                created_at=result.completed_at,
+            )
+        )
     return normalized_results

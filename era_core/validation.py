@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from era_core.hashing import sha256_path
+from era_core.hashing import sha256_json, sha256_path
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -37,6 +37,228 @@ def _validate_command_artifacts(
             errors.append(f"stdout hash mismatch for {result['command_id']}")
         if stderr_path.exists() and sha256_path(stderr_path) != result["stderr_sha256"]:
             errors.append(f"stderr hash mismatch for {result['command_id']}")
+
+
+def _relative_to_run(run_dir: Path, path_value: str | None) -> str | None:
+    if not path_value:
+        return None
+    path = Path(path_value)
+    try:
+        return path.relative_to(run_dir).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _validate_embedded_hash(payload: dict[str, Any], label: str, errors: list[str]) -> None:
+    expected = payload.get("sha256")
+    if not expected:
+        errors.append(f"{label} is missing sha256.")
+        return
+    comparable = dict(payload)
+    comparable.pop("sha256", None)
+    actual = sha256_json(comparable)
+    if actual != expected:
+        errors.append(f"{label} embedded sha256 mismatch.")
+
+
+def _validate_finding_contracts(
+    *,
+    findings: dict[str, Any],
+    evidence_bundles: dict[str, dict[str, Any]],
+    errors: list[str],
+) -> None:
+    drafts = findings.get("lane_finding_drafts")
+    era_findings = findings.get("era_findings")
+    era_scores = findings.get("era_scores")
+    if not isinstance(drafts, list):
+        errors.append("findings.json lane_finding_drafts must be a list.")
+        drafts = []
+    if not isinstance(era_findings, list):
+        errors.append("findings.json era_findings must be a list.")
+        era_findings = []
+    if not isinstance(era_scores, list):
+        errors.append("findings.json era_scores must be a list.")
+        era_scores = []
+
+    normalized_result_ids = {
+        item["normalized_result_id"]
+        for bundle in evidence_bundles.values()
+        for item in bundle.get("tool_normalized_results", [])
+    }
+    draft_ids = {item.get("draft_id") for item in drafts if isinstance(item, dict)}
+
+    for draft in drafts:
+        if draft.get("schema_version") != "LaneFindingDraft.v1":
+            errors.append(f"Draft {draft.get('draft_id', 'unknown')} has an invalid schema_version.")
+        if "risk_level" not in draft or "confidence" not in draft:
+            errors.append(f"Draft {draft.get('draft_id', 'unknown')} is missing risk_level or confidence.")
+        for ref in draft.get("evidence_refs", []):
+            if ref not in normalized_result_ids:
+                errors.append(f"Draft {draft.get('draft_id', 'unknown')} references missing normalized result {ref}.")
+
+    for finding in era_findings:
+        if finding.get("schema_version") != "ERAFinding.v1":
+            errors.append(f"Finding {finding.get('finding_id', 'unknown')} has an invalid schema_version.")
+        if "risk_level" not in finding or "confidence" not in finding:
+            errors.append(f"Finding {finding.get('finding_id', 'unknown')} is missing risk_level or confidence.")
+        if finding.get("safe_to_autofix") is not False:
+            errors.append(f"Finding {finding.get('finding_id', 'unknown')} must keep safe_to_autofix=false.")
+        for ref in finding.get("evidence_refs", []):
+            if ref not in normalized_result_ids and ref not in draft_ids:
+                errors.append(f"Finding {finding.get('finding_id', 'unknown')} references missing evidence {ref}.")
+
+    scopes = {item.get("scope") for item in era_scores if isinstance(item, dict)}
+    if "overall" not in scopes:
+        errors.append("findings.json must include an overall ERAScore.v1 entry.")
+    for score in era_scores:
+        if score.get("schema_version") != "ERAScore.v1":
+            errors.append(f"Score {score.get('score_id', 'unknown')} has an invalid schema_version.")
+        if score.get("scope") not in {"lane", "overall"}:
+            errors.append(f"Score {score.get('score_id', 'unknown')} has invalid scope {score.get('scope')}.")
+        for field in (
+            "classification",
+            "command_status_counts",
+            "risk_counts",
+            "confidence_counts",
+            "evidence_strength_counts",
+        ):
+            if field not in score:
+                errors.append(f"Score {score.get('score_id', 'unknown')} is missing {field}.")
+
+
+def _validate_hash_chain(
+    *,
+    run_dir: Path,
+    hashes: dict[str, Any],
+    findings: dict[str, Any],
+    evidence_bundles: dict[str, dict[str, Any]],
+    errors: list[str],
+) -> None:
+    chain = hashes.get("evidence_hash_chain")
+    if not isinstance(chain, dict):
+        errors.append("hashes.json is missing evidence_hash_chain.")
+        return
+    if chain.get("schema_version") != "ERAEvidenceHashChain.v1":
+        errors.append("evidence_hash_chain has invalid schema_version.")
+
+    raw_artifact_map: dict[str, dict[str, Any]] = {}
+    normalized_map: dict[str, dict[str, Any]] = {}
+    for lane, bundle in evidence_bundles.items():
+        _validate_embedded_hash(bundle, f"{lane} evidence bundle", errors)
+        for raw in bundle.get("tool_raw_artifacts", []):
+            raw_artifact_map[raw["raw_artifact_id"]] = raw
+        for normalized in bundle.get("tool_normalized_results", []):
+            _validate_embedded_hash(normalized, f"Normalized result {normalized.get('normalized_result_id', 'unknown')}", errors)
+            normalized_map[normalized["normalized_result_id"]] = normalized
+
+    _validate_embedded_hash(findings, "findings.json", errors)
+    draft_map = {item["draft_id"]: item for item in findings.get("lane_finding_drafts", [])}
+    finding_map = {item["finding_id"]: item for item in findings.get("era_findings", [])}
+    score_map = {item["score_id"]: item for item in findings.get("era_scores", [])}
+    for draft in draft_map.values():
+        _validate_embedded_hash(draft, f"Draft {draft.get('draft_id', 'unknown')}", errors)
+    for finding in finding_map.values():
+        _validate_embedded_hash(finding, f"Finding {finding.get('finding_id', 'unknown')}", errors)
+    for score in score_map.values():
+        _validate_embedded_hash(score, f"Score {score.get('score_id', 'unknown')}", errors)
+
+    raw_chain = {item.get("raw_artifact_id"): item for item in chain.get("raw_artifacts", [])}
+    normalized_chain = {item.get("normalized_result_id"): item for item in chain.get("normalized_results", [])}
+    draft_chain = {item.get("draft_id"): item for item in chain.get("lane_finding_drafts", [])}
+    finding_chain = {item.get("finding_id"): item for item in chain.get("era_findings", [])}
+    score_chain = {item.get("score_id"): item for item in chain.get("era_scores", [])}
+
+    for raw_id, raw in raw_artifact_map.items():
+        chain_entry = raw_chain.get(raw_id)
+        if chain_entry is None:
+            errors.append(f"Evidence hash chain missing raw artifact {raw_id}.")
+            continue
+        if chain_entry.get("sha256") != raw.get("sha256"):
+            errors.append(f"Evidence hash chain has stale raw artifact hash for {raw_id}.")
+        if chain_entry.get("path") != _relative_to_run(run_dir, raw.get("path")):
+            errors.append(f"Evidence hash chain has stale raw artifact path for {raw_id}.")
+    for raw_id in raw_chain:
+        if raw_id not in raw_artifact_map:
+            errors.append(f"Evidence hash chain references missing raw artifact {raw_id}.")
+
+    for normalized_id, normalized in normalized_map.items():
+        chain_entry = normalized_chain.get(normalized_id)
+        if chain_entry is None:
+            errors.append(f"Evidence hash chain missing normalized result {normalized_id}.")
+            continue
+        if chain_entry.get("sha256") != normalized.get("sha256"):
+            errors.append(f"Evidence hash chain has stale normalized result hash for {normalized_id}.")
+        if chain_entry.get("raw_artifact_refs") != normalized.get("raw_artifact_refs", []):
+            errors.append(f"Evidence hash chain has stale raw refs for normalized result {normalized_id}.")
+        for ref in normalized.get("raw_artifact_refs", []):
+            if ref not in raw_artifact_map:
+                errors.append(f"Normalized result {normalized_id} references missing raw artifact {ref}.")
+    for normalized_id in normalized_chain:
+        if normalized_id not in normalized_map:
+            errors.append(f"Evidence hash chain references missing normalized result {normalized_id}.")
+
+    for draft_id, draft in draft_map.items():
+        chain_entry = draft_chain.get(draft_id)
+        if chain_entry is None:
+            errors.append(f"Evidence hash chain missing draft {draft_id}.")
+            continue
+        if chain_entry.get("sha256") != draft.get("sha256"):
+            errors.append(f"Evidence hash chain has stale draft hash for {draft_id}.")
+        if chain_entry.get("evidence_refs") != draft.get("evidence_refs", []):
+            errors.append(f"Evidence hash chain has stale evidence refs for draft {draft_id}.")
+    for draft_id in draft_chain:
+        if draft_id not in draft_map:
+            errors.append(f"Evidence hash chain references missing draft {draft_id}.")
+
+    for finding_id, finding in finding_map.items():
+        if finding.get("evidence_strength") not in {"none", "advisory_only", "blocked", "unproven"}:
+            if not finding.get("raw_evidence_refs") or not finding.get("raw_evidence_hashes"):
+                errors.append(f"Finding {finding_id} requires raw_evidence_refs and raw_evidence_hashes.")
+        if finding.get("finding_type") == "clear_issue" or finding.get("classification") == "clear_issue":
+            if not finding.get("raw_evidence_refs") or not finding.get("raw_evidence_hashes"):
+                errors.append(f"clear_issue finding {finding_id} requires raw_evidence_refs and raw_evidence_hashes.")
+        chain_entry = finding_chain.get(finding_id)
+        if chain_entry is None:
+            errors.append(f"Evidence hash chain missing finding {finding_id}.")
+            continue
+        if chain_entry.get("sha256") != finding.get("sha256"):
+            errors.append(f"Evidence hash chain has stale finding hash for {finding_id}.")
+        for field in ("evidence_refs", "raw_evidence_refs", "raw_evidence_hashes"):
+            if chain_entry.get(field) != finding.get(field, []):
+                errors.append(f"Evidence hash chain has stale {field} for finding {finding_id}.")
+    for finding_id in finding_chain:
+        if finding_id not in finding_map:
+            errors.append(f"Evidence hash chain references missing finding {finding_id}.")
+
+    for score_id, score in score_map.items():
+        chain_entry = score_chain.get(score_id)
+        if chain_entry is None:
+            errors.append(f"Evidence hash chain missing score {score_id}.")
+            continue
+        if chain_entry.get("sha256") != score.get("sha256"):
+            errors.append(f"Evidence hash chain has stale score hash for {score_id}.")
+    for score_id in score_chain:
+        if score_id not in score_map:
+            errors.append(f"Evidence hash chain references missing score {score_id}.")
+
+    findings_ref = chain.get("findings_bundle", {})
+    if findings_ref.get("sha256") != findings.get("sha256"):
+        errors.append("Evidence hash chain has stale findings bundle hash.")
+    review_ref = chain.get("review_artifact", {})
+    review_path = run_dir / review_ref.get("path", "review.md")
+    if not review_path.exists():
+        errors.append("Evidence hash chain references missing review artifact.")
+    elif review_ref.get("sha256") != sha256_path(review_path):
+        errors.append("Evidence hash chain has stale review artifact hash.")
+
+    review_text = review_path.read_text(encoding="utf-8") if review_path.exists() else ""
+    review_hashes = [findings.get("sha256")]
+    review_hashes.extend(bundle.get("sha256") for bundle in evidence_bundles.values())
+    review_hashes.extend(item.get("sha256") for item in finding_map.values())
+    review_hashes.extend(item.get("sha256") for item in score_map.values())
+    for hash_value in [item for item in review_hashes if item]:
+        if hash_value not in review_text:
+            errors.append(f"review.md is missing hash reference {hash_value}.")
 
 
 def validate_run_dir(run_dir: Path) -> dict[str, object]:
@@ -144,6 +366,14 @@ def validate_run_dir(run_dir: Path) -> dict[str, object]:
 
     for bundle in evidence_bundles.values():
         _validate_command_artifacts(bundle=bundle, errors=errors)
+    _validate_finding_contracts(findings=findings, evidence_bundles=evidence_bundles, errors=errors)
+    _validate_hash_chain(
+        run_dir=run_dir,
+        hashes=hashes,
+        findings=findings,
+        evidence_bundles=evidence_bundles,
+        errors=errors,
+    )
 
     hash_entries = hashes.get("entries", [])
     if not isinstance(hash_entries, list):

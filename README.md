@@ -8,6 +8,8 @@ Current slice:
 ERA-01A — Local Read-Only Accuracy Proof
 ERA-01B — Redundancy Scan Proof
 ERA-01C — Efficiency Workload Proof
+ERA-02  — Unified Finding Normalization
+ERA-03  — Evidence Hash Chain
 ```
 
 Core doctrine:
@@ -69,3 +71,32 @@ the workload ran successfully
 timing variance is not unstable
 a baseline efficiency artifact exists
 ```
+
+## Unified Finding Model
+
+ERA-02 standardizes the internal evidence chain as:
+
+```text
+ToolRawArtifact.v1
+ToolNormalizedResult.v1
+LaneFindingDraft.v1
+ERAFinding.v1
+ERAScore.v1
+```
+
+Tool parsers only emit `ToolNormalizedResult.v1`. Promotion into lane drafts, final findings, and scores happens in the shared contract layer so risk, confidence, raw evidence references, and lane-specific details stay aligned across all lanes.
+
+## Evidence Hash Chain
+
+ERA-03 writes `hashes.json` with both file hashes and a structural `ERAEvidenceHashChain.v1` section:
+
+```text
+raw artifacts
+normalized results
+lane finding drafts
+ERA findings
+ERA scores
+review artifact
+```
+
+`validate --latest` recomputes file hashes, embedded object hashes, review hash references, and finding-to-raw-evidence references.

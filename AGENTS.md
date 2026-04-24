@@ -39,6 +39,24 @@ Record variance classifications and baseline comparisons.
 Avoid regression or improvement claims when baseline evidence is absent.
 ```
 
+Allowed evaluation behavior in ERA-02:
+
+```text
+Promote raw evidence through shared normalized-result, draft, finding, and score contracts.
+Preserve lane-specific details without letting parsers emit ERAFinding.v1 directly.
+Keep risk and confidence as separate dimensions in all promoted findings.
+Fail validation when draft, finding, or score references are malformed.
+```
+
+Allowed evaluation behavior in ERA-03:
+
+```text
+Write hashes.json with file hashes and a structural evidence hash chain.
+Record raw, normalized, draft, finding, score, and review artifact hash references.
+Fail validation on stale object hashes, stale review hashes, or broken raw evidence references.
+Require clear_issue findings to include raw evidence refs and hashes.
+```
+
 Operator notes:
 
 ```text

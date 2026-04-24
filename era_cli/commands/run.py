@@ -14,6 +14,13 @@ from era_core.artifact_paths import (
     utc_now_text,
 )
 from era_core.command_runner import run_planned_commands
+from era_core.contracts import (
+    build_era_scores,
+    build_findings_bundle,
+    build_tool_normalized_result,
+    build_tool_raw_artifacts,
+    promote_normalized_results,
+)
 from era_core.efficiency import (
     apply_efficiency_tooling,
     build_efficiency_baseline_artifact,
@@ -30,7 +37,8 @@ from era_core.git_info import (
     ensure_git_repo,
     resolve_baseline_commit,
 )
-from era_core.hashing import sha256_json, sha256_path, write_json
+from era_core.hash_chain import build_hash_manifest
+from era_core.hashing import sha256_json, write_json
 from era_core.models import CommandResult
 from era_core.redundancy import (
     apply_redundancy_tooling,
@@ -74,29 +82,7 @@ def register(parser: argparse.ArgumentParser) -> None:
 
 
 def _build_raw_artifacts(run_id: str, command_results: list[CommandResult]) -> list[dict[str, Any]]:
-    raw_artifacts: list[dict[str, Any]] = []
-    for result in command_results:
-        if not result.stdout_path or not result.stderr_path:
-            continue
-        for artifact_kind, path_value, sha_value in (
-            ("stdout", result.stdout_path, result.stdout_sha256),
-            ("stderr", result.stderr_path, result.stderr_sha256),
-        ):
-            raw_artifacts.append(
-                {
-                    "schema_version": "ToolRawArtifact.v1",
-                    "raw_artifact_id": f"{result.command_id}:{artifact_kind}",
-                    "run_id": run_id,
-                    "command_id": result.command_id,
-                    "tool_name": result.tool_name,
-                    "tool_version": result.tool_version,
-                    "artifact_kind": artifact_kind,
-                    "path": path_value,
-                    "sha256": sha_value,
-                    "created_at": result.completed_at,
-                }
-            )
-    return raw_artifacts
+    return build_tool_raw_artifacts(run_id, command_results)
 
 
 def _build_accuracy_normalized_results(
@@ -118,6 +104,7 @@ def _build_accuracy_normalized_results(
             parsed_findings.append(
                 {
                     "finding_type": "accuracy_gate_failed",
+                    "summary": f"{result.label} did not complete successfully in the accuracy lane.",
                     "target_files": [],
                     "target_symbols": [],
                     "risk_level": "high",
@@ -125,25 +112,30 @@ def _build_accuracy_normalized_results(
                     "evidence_strength": "mechanical",
                     "recommended_action": "operator_review",
                     "blocked_reason": None,
+                    "lane_details": {
+                        "command_id": result.command_id,
+                        "command_label": result.label,
+                        "command_status": result.status,
+                        "exit_code": result.exit_code,
+                    },
                 }
             )
-        record = {
-            "schema_version": "ToolNormalizedResult.v1",
-            "normalized_result_id": f"normalized:{result.command_id}",
-            "run_id": run_id,
-            "raw_artifact_refs": raw_refs_by_command.get(result.command_id, []),
-            "normalizer_name": "era_command_normalizer",
-            "normalizer_version": __version__,
-            "tool_name": result.tool_name,
-            "tool_version": result.tool_version,
-            "summary_status": result.status,
-            "parsed_findings": parsed_findings,
-            "parse_warnings": [],
-            "parse_errors": [],
-            "created_at": result.completed_at,
-        }
-        record["sha256"] = sha256_json(record)
-        normalized_results.append(record)
+        normalized_results.append(
+            build_tool_normalized_result(
+                run_id=run_id,
+                command_id=result.command_id,
+                raw_artifact_refs=raw_refs_by_command.get(result.command_id, []),
+                normalizer_name="era_command_normalizer",
+                normalizer_version=__version__,
+                tool_name=result.tool_name,
+                tool_version=result.tool_version,
+                summary_status=result.status,
+                parsed_findings=parsed_findings,
+                parse_warnings=[],
+                parse_errors=[],
+                created_at=result.completed_at,
+            )
+        )
     return normalized_results
 
 
@@ -158,67 +150,16 @@ def _build_findings(
     accuracy_target_files: list[str],
     created_at: str,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    raw_by_command: dict[str, list[dict[str, Any]]] = {}
-    for artifact in raw_artifacts:
-        raw_by_command.setdefault(artifact["command_id"], []).append(artifact)
-
-    lane_drafts: list[dict[str, Any]] = []
-    findings: list[dict[str, Any]] = []
-    for normalized in normalized_results:
-        if not normalized["parsed_findings"]:
-            continue
-        command_id = normalized["normalized_result_id"].split("normalized:", 1)[1]
-        lane = command_lanes[command_id]
-        raw_refs = raw_by_command.get(command_id, [])
-        for index, parsed in enumerate(normalized["parsed_findings"], start=1):
-            target_files = parsed.get("target_files") or (accuracy_target_files[:] if lane == "accuracy" else [])
-            target_symbols = parsed.get("target_symbols") or []
-            draft = {
-                "schema_version": "LaneFindingDraft.v1",
-                "draft_id": f"draft:{command_id}:{index}",
-                "run_id": run_id,
-                "lane": lane,
-                "finding_type": parsed["finding_type"],
-                "target_files": target_files,
-                "target_symbols": target_symbols,
-                "evidence_refs": [normalized["normalized_result_id"]],
-                "risk_level": parsed["risk_level"],
-                "confidence": parsed["confidence"],
-                "evidence_strength": parsed["evidence_strength"],
-                "recommended_action": parsed["recommended_action"],
-                "blocked_reason": parsed.get("blocked_reason"),
-                "created_at": created_at,
-            }
-            draft["sha256"] = sha256_json(draft)
-            lane_drafts.append(draft)
-
-            finding = {
-                "schema_version": "ERAFinding.v1",
-                "finding_id": f"finding:{command_id}:{index}",
-                "run_id": run_id,
-                "repo_id": repo_id,
-                "commit_sha": commit_sha,
-                "lane": lane,
-                "finding_type": parsed["finding_type"],
-                "target_files": target_files,
-                "target_symbols": target_symbols,
-                "evidence_refs": [normalized["normalized_result_id"], draft["draft_id"]],
-                "raw_evidence_refs": [item["raw_artifact_id"] for item in raw_refs],
-                "raw_evidence_hashes": [item["sha256"] for item in raw_refs],
-                "risk_level": parsed["risk_level"],
-                "confidence": parsed["confidence"],
-                "evidence_strength": parsed["evidence_strength"],
-                "recommended_action": parsed["recommended_action"],
-                "safe_to_autofix": False,
-                "requires_operator_review": True,
-                "operator_decision": "accepted_exception" if parsed.get("exception_id") else "pending",
-                "blocked_reason": parsed.get("blocked_reason"),
-                "created_at": created_at,
-            }
-            finding["sha256"] = sha256_json(finding)
-            findings.append(finding)
-
-    return lane_drafts, findings
+    return promote_normalized_results(
+        run_id=run_id,
+        repo_id=repo_id,
+        commit_sha=commit_sha,
+        normalized_results=normalized_results,
+        raw_artifacts=raw_artifacts,
+        command_lanes=command_lanes,
+        default_target_files_by_lane={"accuracy": accuracy_target_files[:]},
+        created_at=created_at,
+    )
 
 
 def _determine_read_only_invariant(
@@ -259,25 +200,6 @@ def _determine_run_status(
     ):
         return "completed_partial"
     return "completed"
-
-
-def _build_hash_manifest(run_id: str, run_root: Path) -> dict[str, Any]:
-    entries: list[dict[str, str]] = []
-    for path in sorted(run_root.rglob("*")):
-        if not path.is_file() or path.name == "hashes.json":
-            continue
-        entries.append(
-            {
-                "path": path.relative_to(run_root).as_posix(),
-                "sha256": sha256_path(path),
-            }
-        )
-    return {
-        "schema_version": "ERAHashManifest.v1",
-        "run_id": run_id,
-        "entries": entries,
-        "created_at": utc_now_text(),
-    }
 
 
 def _infer_era_root(artifacts_root: Path | None) -> Path | None:
@@ -533,15 +455,6 @@ def execute_run(
         write_json(run_paths.efficiency_evidence_bundle, efficiency_bundle)
         evidence_bundle_refs.append(str(run_paths.efficiency_evidence_bundle))
 
-    findings_bundle = {
-        "schema_version": "ERAFindingSet.v1",
-        "run_id": run_id,
-        "repo_id": repo_id,
-        "lane_finding_drafts": lane_drafts,
-        "era_findings": findings,
-        "created_at": utc_now_text(),
-    }
-
     post_snapshot = capture_git_snapshot(repo_path)
     read_only_invariant_status, read_only_invariant_notes = _determine_read_only_invariant(
         pre_snapshot,
@@ -568,6 +481,25 @@ def execute_run(
 
     completed_at = utc_now_text()
     run_status = _determine_run_status(command_results, lane_classifications)
+    era_scores = build_era_scores(
+        run_id=run_id,
+        repo_id=repo_id,
+        commit_sha=pre_snapshot["head"] or "UNCOMMITTED",
+        lane_classifications=lane_classifications,
+        command_results=command_results,
+        lane_drafts=lane_drafts,
+        findings=findings,
+        overall_classification=run_status,
+        created_at=completed_at,
+    )
+    findings_bundle = build_findings_bundle(
+        run_id=run_id,
+        repo_id=repo_id,
+        lane_drafts=lane_drafts,
+        findings=findings,
+        era_scores=era_scores,
+        created_at=completed_at,
+    )
 
     run_artifact = {
         "schema_version": "ERAEvaluationRun.v1",
@@ -636,7 +568,13 @@ def execute_run(
         output_path=run_paths.review,
     )
 
-    hashes = _build_hash_manifest(run_id, run_paths.root)
+    hashes = build_hash_manifest(
+        run_id=run_id,
+        run_root=run_paths.root,
+        evidence_bundles=evidence_bundles,
+        findings_bundle=findings_bundle,
+        review_path=run_paths.review,
+    )
     write_json(run_paths.hashes, hashes)
 
     validation = validate_run_dir(run_paths.root)

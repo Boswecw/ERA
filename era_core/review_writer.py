@@ -123,6 +123,31 @@ def write_review(
         lines.append(
             f"| {tool['tool']} | {tool['status']} | {tool['version'] or 'n/a'} | {tool['note'] or 'n/a'} |"
         )
+    score_rows = findings_bundle.get("era_scores", [])
+    if score_rows:
+        lines.extend(
+            [
+                "",
+                "## Score Summary",
+                "| scope | classification | commands | drafts | findings |",
+                "|---|---|---:|---:|---:|",
+            ]
+        )
+        for score in score_rows:
+            scope = score["scope"] if score["scope"] == "overall" else str(score.get("lane") or score["scope"])
+            lines.append(
+                "| "
+                + " | ".join(
+                    [
+                        scope,
+                        str(score.get("classification", "n/a")),
+                        str(score.get("command_count", 0)),
+                        str(score.get("draft_count", 0)),
+                        str(score.get("finding_count", 0)),
+                    ]
+                )
+                + " |"
+            )
 
     if "accuracy" in run_artifact["lanes"]:
         command_results = [CommandResult(**item) for item in evidence_bundles["accuracy"]["command_results"]]
@@ -188,7 +213,7 @@ def write_review(
         if redundancy_findings:
             for finding in redundancy_findings:
                 lines.append(
-                    f"- `{finding['finding_type']}` risk=`{finding['risk_level']}` confidence=`{finding['confidence']}` files=`{', '.join(finding['target_files']) or 'n/a'}` reason=`{finding.get('blocked_reason') or 'n/a'}`"
+                    f"- `{finding['finding_type']}` risk=`{finding['risk_level']}` confidence=`{finding['confidence']}` summary=`{finding.get('summary') or 'n/a'}` files=`{', '.join(finding['target_files']) or 'n/a'}` reason=`{finding.get('blocked_reason') or 'n/a'}`"
                 )
         else:
             lines.append("- none")
@@ -249,7 +274,7 @@ def write_review(
         if efficiency_findings:
             for finding in efficiency_findings:
                 lines.append(
-                    f"- `{finding['finding_type']}` risk=`{finding['risk_level']}` confidence=`{finding['confidence']}` symbols=`{', '.join(finding['target_symbols']) or 'n/a'}`"
+                    f"- `{finding['finding_type']}` risk=`{finding['risk_level']}` confidence=`{finding['confidence']}` summary=`{finding.get('summary') or 'n/a'}` symbols=`{', '.join(finding['target_symbols']) or 'n/a'}`"
                 )
         else:
             lines.append("- none")
@@ -262,6 +287,45 @@ def write_review(
                 )
         else:
             lines.append("- none")
+
+    lines.extend(
+        [
+            "",
+            "## Hash References",
+            f"- findings bundle: `{findings_bundle.get('sha256', 'n/a')}`",
+            "",
+            "### Evidence Bundles",
+            "| lane | hash |",
+            "|---|---|",
+        ]
+    )
+    for lane, bundle in sorted(evidence_bundles.items()):
+        lines.append(f"| {lane} | {bundle.get('sha256', 'n/a')} |")
+    lines.extend(
+        [
+            "",
+            "### Finding Hashes",
+            "| finding | lane | hash |",
+            "|---|---|---|",
+        ]
+    )
+    for finding in findings_bundle.get("era_findings", []):
+        lines.append(f"| {finding['finding_id']} | {finding['lane']} | {finding.get('sha256', 'n/a')} |")
+    if not findings_bundle.get("era_findings", []):
+        lines.append("| none | n/a | n/a |")
+    lines.extend(
+        [
+            "",
+            "### Score Hashes",
+            "| score | scope | hash |",
+            "|---|---|---|",
+        ]
+    )
+    for score in findings_bundle.get("era_scores", []):
+        scope = score["scope"] if score["scope"] == "overall" else str(score.get("lane") or score["scope"])
+        lines.append(f"| {score['score_id']} | {scope} | {score.get('sha256', 'n/a')} |")
+    if not findings_bundle.get("era_scores", []):
+        lines.append("| none | n/a | n/a |")
 
     lines.extend(
         [
